@@ -61,7 +61,7 @@ class Input:
                                         "los_max_duration": 60
                                     },
                                     "filter_options": {
-                                        "remove_lone": False,
+                                        "remove_lone_fixes": False,
                                         "filter_invalid_values": True,
                                         "max_speed":130,
                                         "max_ele_change":1000,
@@ -129,4 +129,84 @@ class Input:
     def dump_dict(self):
 
         return self.data
+
+    def update(self,interval, insert_missing, insert_until,
+         insert_max_seconds, loss_max_duration, filter_invalid_values,
+         max_speed, max_ele_change, min_change_3_fixes,
+         detect_trip, min_distance, min_trip_length, min_trip_duration,
+         min_pause_duration, max_pause_duration, detect_trip_mode,
+         vehicle_cutoff, bicycle_cutoff, walk_cutoff,
+         percentile_to_sample, min_segment_length,
+         include_acc, include_vect,
+         mark_not_wearing_time, minutes_zeros_row,
+         detect_activity_bouts, activity_bout_duration,
+         activity_bout_upper_limit, activity_bout_lower_limit, activity_bout_tolerance,
+         detect_sedentary_bouts, sedentary_bout_duration,
+         sedentary_bout_upper_limit, sedentary_bout_tolerance,
+         very_hard_cutoff, hard_cutoff, moderate_cutoff, light_cutoff,
+         merge_data_to_gps,
+         driver_mem, executor_mem, mem_fraction, shuffle_partitions, mem_offHeap_enabled,
+         mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
+         broadcast_timeout, network_timeout):
+        
+        # GPS parameters
+        self.data['gps']['parameters']['general']['interval'] = interval
+        self.data['gps']['parameters']['general']['insert_missing'] = insert_missing
+        self.data['gps']['parameters']['general']['insert_until'] = insert_until
+        self.data['gps']['parameters']['general']['insert_max_seconds'] = insert_max_seconds
+        self.data['gps']['parameters']['general']['los_max_duration'] = loss_max_duration
+        self.data['gps']['parameters']['filter_options']['filter_invalid_values'] = filter_invalid_values
+        self.data['gps']['parameters']['filter_options']['max_speed'] = max_speed
+        self.data['gps']['parameters']['filter_options']['max_ele_change'] = max_ele_change
+        self.data['gps']['parameters']['filter_options']['min_change_3_fixes'] = min_change_3_fixes
+        self.data['gps']['parameters']['trip_detection']['detect_trip'] = detect_trip
+        self.data['gps']['parameters']['trip_detection']['min_distance'] = min_distance
+        self.data['gps']['parameters']['trip_detection']['min_trip_length'] = min_trip_length
+        self.data['gps']['parameters']['trip_detection']['min_trip_duration'] = min_trip_duration
+        self.data['gps']['parameters']['trip_detection']['min_pause_duration'] = min_pause_duration
+        self.data['gps']['parameters']['trip_detection']['max_pause_duration'] = max_pause_duration
+        self.data['gps']['parameters']['mode_of_transportation']['detect_trip_mode'] = detect_trip_mode
+        self.data['gps']['parameters']['mode_of_transportation']['vehicle_cutoff'] = vehicle_cutoff
+        self.data['gps']['parameters']['mode_of_transportation']['bicycle_cutoff'] = bicycle_cutoff
+        self.data['gps']['parameters']['mode_of_transportation']['walk_cutoff'] = walk_cutoff
+        self.data['gps']['parameters']['mode_of_transportation']['percentile_to_sample'] = percentile_to_sample
+        self.data['gps']['parameters']['mode_of_transportation']['min_segment_length'] = min_segment_length
+
+        # Accelerometer parameters
+        self.data['accelerometer']['parameters']['include_acc'] = include_acc
+        self.data['accelerometer']['parameters']['include_vect'] = include_vect
+        self.data['accelerometer']['parameters']['not_wearing_time']['mark_not_wearing_time'] = mark_not_wearing_time
+        self.data['accelerometer']['parameters']['not_wearing_time']['minutes_zeros_row'] = minutes_zeros_row
+        self.data['accelerometer']['parameters']['activity_bout']['detect_activity_bouts'] = detect_activity_bouts
+        self.data['accelerometer']['parameters']['activity_bout']['activity_bout_duration'] = activity_bout_duration
+        self.data['accelerometer']['parameters']['activity_bout'][
+            'activity_bout_upper_limit'] = activity_bout_upper_limit
+        self.data['accelerometer']['parameters']['activity_bout'][
+            'activity_bout_lower_limit'] = activity_bout_lower_limit
+        self.data['accelerometer']['parameters']['activity_bout']['activity_bout_tolerance'] = activity_bout_tolerance
+        self.data['accelerometer']['parameters']['sedentary_bout']['detect_sedentary_bouts'] = detect_sedentary_bouts
+        self.data['accelerometer']['parameters']['sedentary_bout']['sedentary_bout_duration'] = sedentary_bout_duration
+        self.data['accelerometer']['parameters']['sedentary_bout'][
+            'sedentary_bout_upper_limit'] = sedentary_bout_upper_limit
+        self.data['accelerometer']['parameters']['sedentary_bout']['sedentary_bout_tolerance'] = sedentary_bout_tolerance
+        self.data['accelerometer']['parameters']['activity_classification']['very_hard_cutoff'] = very_hard_cutoff
+        self.data['accelerometer']['parameters']['activity_classification']['hard_cutoff'] = hard_cutoff
+        self.data['accelerometer']['parameters']['activity_classification']['moderate_cutoff'] = moderate_cutoff
+        self.data['accelerometer']['parameters']['activity_classification']['light_cutoff'] = light_cutoff
+
+        # Merge options
+        self.data['merge_options']['merge_data_to_gps'] = merge_data_to_gps
+
+        # Spark parameters
+        self.data['spark']['memory']['fraction'] = mem_fraction
+        self.data['spark']['executor']['memory'] = executor_mem
+        self.data['spark']['driver']['memory'] = driver_mem
+        self.data['spark']['sql']['shuffle']['partitions'] = shuffle_partitions
+        self.data['spark']['memory']['offHeap']['enabled'] = mem_offHeap_enabled
+        self.data['spark']['memory']['offHeap']['size'] = mem_offHeap_size
+        self.data['spark']['cleaner']['referenceTracking']['cleanCheckpoints'] = clean_checkpoints
+        self.data['spark']['sql']['codegen']['wholeStage'] = codegen_wholeStage
+        self.data['spark']['sql']['codegen']['fallback'] = codegen_fallback
+        self.data['spark']['sql']['broadcastTimeout'] = broadcast_timeout
+        self.data['spark']['network']['timeout'] = network_timeout
 

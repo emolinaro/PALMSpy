@@ -1,22 +1,19 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-#import findspark
-#findspark.init()
-
 from pyspark.conf import SparkConf
-from pyspark.sql import SparkSession, SQLContext, Row
+from pyspark.sql import SparkSession
 import textwrap
 import json
 from tools import PColors as pc
-import os
+import os, sys
 import shutil
 import glob
-import argparse
+from tools import Input
+from parser import parser
 
 from GPSProcessing import *
 from AccProcessing import *
-
 
 def header():
     file = open("VERSION", "r")
@@ -35,12 +32,75 @@ def header():
     print(" ")
     pass
 
-def main(config_file, gps_path, acc_path):
+def main(gps_path, acc_path, config_file,
+         interval, insert_missing, insert_until,
+         insert_max_seconds, los_max_duration, filter_invalid_values,
+         max_speed, max_ele_change, min_change_3_fixes,
+         detect_trip, min_distance, min_trip_length, min_trip_duration,
+         min_pause_duration, max_pause_duration, detect_trip_mode,
+         vehicle_cutoff, bicycle_cutoff, walk_cutoff,
+         percentile_to_sample, min_segment_length,
+         include_acc, include_vect,
+         mark_not_wearing_time, minutes_zeros_row,
+         detect_activity_bouts, activity_bout_duration,
+         activity_bout_upper_limit, activity_bout_lower_limit, activity_bout_tolerance,
+         detect_sedentary_bouts, sedentary_bout_duration,
+         sedentary_bout_upper_limit, sedentary_bout_tolerance,
+         very_hard_cutoff, hard_cutoff, moderate_cutoff, light_cutoff,
+         merge_data_to_gps,
+         driver_mem, executor_mem, mem_fraction, shuffle_partitions, mem_offHeap_enabled,
+         mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
+         broadcast_timeout, network_timeout,
+         json_filename):
 
-    # Load configuration parameters
-    file_settings = open(config_file, "r")
-    with file_settings as f:
-        settings = json.load(f)
+    if gps_path is None:
+        print("Specify path to GPS data folder.\n")
+        sys.exit()
+
+    if acc_path is None:
+        print("Specify path to accelerator data folder.\n")
+        sys.exit()
+
+    if gps_path[-1] != "/":
+        gps_path = gps_path + "/"
+
+    if acc_path[-1] != "/":
+        acc_path = acc_path + "/"
+
+    # Output directory
+    if not os.path.exists('HABITUS_output'):
+        os.makedirs('HABITUS_output')
+
+    # Load default configuration parameters and update them from command line
+    params = Input()
+    params.update(interval, insert_missing, insert_until,
+         insert_max_seconds, los_max_duration, filter_invalid_values,
+         max_speed, max_ele_change, min_change_3_fixes,
+         detect_trip, min_distance, min_trip_length, min_trip_duration,
+         min_pause_duration, max_pause_duration, detect_trip_mode,
+         vehicle_cutoff, bicycle_cutoff, walk_cutoff,
+         percentile_to_sample, min_segment_length,
+         include_acc, include_vect,
+         mark_not_wearing_time, minutes_zeros_row,
+         detect_activity_bouts, activity_bout_duration,
+         activity_bout_upper_limit, activity_bout_lower_limit, activity_bout_tolerance,
+         detect_sedentary_bouts, sedentary_bout_duration,
+         sedentary_bout_upper_limit, sedentary_bout_tolerance,
+         very_hard_cutoff, hard_cutoff, moderate_cutoff, light_cutoff,
+         merge_data_to_gps,
+         driver_mem, executor_mem, mem_fraction, shuffle_partitions, mem_offHeap_enabled,
+         mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
+         broadcast_timeout, network_timeout)
+    settings = params.dump_dict()
+
+    #  Overwrite configuration parameters from file or save them to file
+    if config_file is None:
+        with open('settings.json', 'w') as f:
+            json.dump(settings, f)
+    else:
+        file_settings = open(config_file, "r")
+        with file_settings as f:
+            settings = json.load(f)
 
     # Set Spark configuration parameters
     conf = SparkConf().setAll([('spark.memory.fraction', settings['spark']['memory']['fraction']),
@@ -57,31 +117,19 @@ def main(config_file, gps_path, acc_path):
                                ('spark.sql.codegen.fallback', settings['spark']['sql']['codegen']['fallback'])]
                               )
     # ('spark.driver.host', 'localhost') # TODO: allows to pass configs with spark-submit, without spark.conf file
-    # ('spark.ui.port', '3000')]
+    # ('spark.ui.port', '3000')
 
-    spark = SparkSession.builder.config(conf=conf).master("local[*]").appName("Spark-PALMS").getOrCreate()
-    #spark = SparkSession.builder.config(conf=conf).master("spark://adm-120989-mac:7077").appName("Spark-PALMS").getOrCreate()
+    spark = SparkSession.builder.config(conf=conf).master("local[*]").appName("HABITUS").getOrCreate()
     sc = spark.sparkContext
     sc.setLogLevel("ERROR")
     sc.setCheckpointDir('checkpoints')
-    sc.getConf().getAll()  # or sc._conf.getAll()
+    sc.getConf().getAll()
 
     spark.catalog.clearCache()
-
-    if gps_path[-1] != "/":
-        gps_path = gps_path + "/"
-
-    if acc_path[-1] != "/":
-        acc_path = acc_path + "/"
-
-    # Output directory
-    if not os.path.exists('PALMS_output'):
-        os.makedirs('PALMS_output')
 
     header()
 
     print("Number of CPU cores: {}".format(str(sc.defaultParallelism)))
-    #print(sc.getConf().getAll() )
 
     # List accelerometer and GPS data files have the same name
     list_file_acc = sorted(os.listdir(acc_path))
@@ -418,7 +466,7 @@ def main(config_file, gps_path, acc_path):
                         header_saved = True
                     for line in fin:
                         fout.write(line)
-
+"""
 parser = argparse.ArgumentParser(
     description="Implementation of Personal Activity and Location Measurement System (PALMS) with Apache Spark.",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -445,7 +493,7 @@ parser.add_argument(
     dest="acc_path",
     help = "directory of accelerometer raw data"
 )
-
+"""
 if __name__ == "__main__":
     arguments = parser.parse_args()
     main(**vars(arguments))

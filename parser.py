@@ -1,104 +1,38 @@
 #!/usr/bin/env python
 
-import json
-from tools import Input
 import argparse
-
-
-def main(interval=30, insert_missing=True, insert_until=False,
-         insert_max_seconds=600, loss_max_duration=60, filter_invalid_values=True,
-         max_speed = 130, max_ele_change=1000, min_change_3_fixes=10,
-         detect_trip=True, min_distance=34, min_trip_length=100, min_trip_duration=180,
-		 min_pause_duration=180, max_pause_duration=300, detect_trip_mode=True,
-		 vehicle_cutoff=25, bicycle_cutoff=10, walk_cutoff=1,
-		 percentile_to_sample=90, min_segment_length=30,
-         include_acc=False, include_vect=False,
-		 mark_not_wearing_time=True, minutes_zeros_row=30,
-		 detect_activity_bouts=True, activity_bout_duration=5,
-		 activity_bout_upper_limit=9999, activity_bout_lower_limit=1953, activity_bout_tolerance=2,
-		 detect_sedentary_bouts=True, sedentary_bout_duration=30,
-		 sedentary_bout_upper_limit=100, sedentary_bout_tolerance=1,
-		 very_hard_cutoff=9498, hard_cutoff=5725, moderate_cutoff=1953, light_cutoff=100,
-		 merge_data_to_gps=True,
-         driver_mem='16g', executor_mem='16g', mem_fraction=0.6, shuffle_partitions=20, mem_offHeap_enabled=True,
-         mem_offHeap_size='16g', clean_checkpoints=True, codegen_wholeStage=False, codegen_fallback=True,
-         broadcast_timeout=1200, network_timeout='800s',
-         json_file='settings.json'):
-
-
-	#TODO: add option to remove lone fixes
-	params = Input()
-	settings = params.dump_dict()
-
-	# GPS parameters
-	settings['gps']['parameters']['general']['interval'] = interval
-	settings['gps']['parameters']['general']['insert_missing'] = insert_missing
-	settings['gps']['parameters']['general']['insert_until'] = insert_until
-	settings['gps']['parameters']['general']['insert_max_seconds'] = insert_max_seconds
-	settings['gps']['parameters']['general']['los_max_duration'] = loss_max_duration
-	settings['gps']['parameters']['filter_options']['filter_invalid_values'] = filter_invalid_values
-	settings['gps']['parameters']['filter_options']['max_speed'] = max_speed
-	settings['gps']['parameters']['filter_options']['max_ele_change'] = max_ele_change
-	settings['gps']['parameters']['filter_options']['min_change_3_fixes'] = min_change_3_fixes
-	settings['gps']['parameters']['trip_detection']['detect_trip'] = detect_trip
-	settings['gps']['parameters']['trip_detection']['min_distance'] = min_distance
-	settings['gps']['parameters']['trip_detection']['min_trip_length'] = min_trip_length
-	settings['gps']['parameters']['trip_detection']['min_trip_duration'] = min_trip_duration
-	settings['gps']['parameters']['trip_detection']['min_pause_duration'] = min_pause_duration
-	settings['gps']['parameters']['trip_detection']['max_pause_duration'] = max_pause_duration
-	settings['gps']['parameters']['mode_of_transportation']['detect_trip_mode'] = detect_trip_mode
-	settings['gps']['parameters']['mode_of_transportation']['vehicle_cutoff'] = vehicle_cutoff
-	settings['gps']['parameters']['mode_of_transportation']['bicycle_cutoff'] = bicycle_cutoff
-	settings['gps']['parameters']['mode_of_transportation']['walk_cutoff'] = walk_cutoff
-	settings['gps']['parameters']['mode_of_transportation']['percentile_to_sample'] = percentile_to_sample
-	settings['gps']['parameters']['mode_of_transportation']['min_segment_length'] = min_segment_length
-
-	# Accelerometer parameters
-	settings['accelerometer']['parameters']['include_acc'] = include_acc
-	settings['accelerometer']['parameters']['include_vect'] = include_vect
-	settings['accelerometer']['parameters']['not_wearing_time']['mark_not_wearing_time'] = mark_not_wearing_time
-	settings['accelerometer']['parameters']['not_wearing_time']['minutes_zeros_row'] = minutes_zeros_row
-	settings['accelerometer']['parameters']['activity_bout']['detect_activity_bouts'] = detect_activity_bouts
-	settings['accelerometer']['parameters']['activity_bout']['activity_bout_duration'] = activity_bout_duration
-	settings['accelerometer']['parameters']['activity_bout']['activity_bout_upper_limit'] = activity_bout_upper_limit
-	settings['accelerometer']['parameters']['activity_bout']['activity_bout_lower_limit'] = activity_bout_lower_limit
-	settings['accelerometer']['parameters']['activity_bout']['activity_bout_tolerance'] = activity_bout_tolerance
-	settings['accelerometer']['parameters']['sedentary_bout']['detect_sedentary_bouts'] = detect_sedentary_bouts
-	settings['accelerometer']['parameters']['sedentary_bout']['sedentary_bout_duration'] = sedentary_bout_duration
-	settings['accelerometer']['parameters']['sedentary_bout']['sedentary_bout_upper_limit'] = sedentary_bout_upper_limit
-	settings['accelerometer']['parameters']['sedentary_bout']['sedentary_bout_tolerance'] = sedentary_bout_tolerance
-	settings['accelerometer']['parameters']['activity_classification']['very_hard_cutoff'] = very_hard_cutoff
-	settings['accelerometer']['parameters']['activity_classification']['hard_cutoff'] = hard_cutoff
-	settings['accelerometer']['parameters']['activity_classification']['moderate_cutoff'] = moderate_cutoff
-	settings['accelerometer']['parameters']['activity_classification']['light_cutoff'] = light_cutoff
-
-	# Merge options
-	settings['merge_options']['merge_data_to_gps'] = merge_data_to_gps
-
-	# Spark parameters
-	settings['spark']['memory']['fraction'] = mem_fraction
-	settings['spark']['executor']['memory'] = executor_mem
-	settings['spark']['driver']['memory'] = driver_mem
-	settings['spark']['sql']['shuffle']['partitions'] = shuffle_partitions
-	settings['spark']['memory']['offHeap']['enabled'] = mem_offHeap_enabled
-	settings['spark']['memory']['offHeap']['size'] = mem_offHeap_size
-	settings['spark']['cleaner']['referenceTracking']['cleanCheckpoints'] = clean_checkpoints
-	settings['spark']['sql']['codegen']['wholeStage'] = codegen_wholeStage
-	settings['spark']['sql']['codegen']['fallback'] = codegen_fallback
-	settings['spark']['sql']['broadcastTimeout'] = broadcast_timeout
-	settings['spark']['network']['timeout'] = network_timeout
-
-	# export parameters into JSON file
-	with open('result.json', 'w') as f:
-		json.dump(settings, f)
 
 # refer tot he program name: %(prog)s
 parser = argparse.ArgumentParser(
-	prog='gen_settings',
-	usage='%(prog)s [options]',
-	description="Import input parameters for Spark, GPS and Accelerometer configuration.\
-                 Spark runs in 'local' mode. GPS/Accelerometer settings match the default PALMS configuration.",
+	prog='HABITUS',
+	usage='habitus --gps-path GPS_PATH --acc-path ACC_PATH [optional arguments]',
+	description="%(prog)s is an implementation of Personal Activity and Location Measurement System (PALMS)\
+	             with Apache Spark.",
 	formatter_class=argparse.ArgumentDefaultsHelpFormatter
+)
+
+requiredargs = parser.add_argument_group('required named arguments')
+
+requiredargs.add_argument(
+    "--gps-path",
+    type=str,
+    dest="gps_path",
+    help="directory of GPS raw data"
+)
+
+requiredargs.add_argument(
+    "--acc-path",
+    type=str,
+    dest="acc_path",
+    help = "directory of accelerometer raw data"
+)
+
+parser.add_argument(
+    "--config-file",
+    default=None,
+    type=str,
+    dest="config_file",
+    help="JSON file with configuration settings"
 )
 
 # GPS options
@@ -136,9 +70,9 @@ parser.add_argument(
 )
 
 parser.add_argument(
-	"--loss-max-duration",
+	"--los-max-duration",
 	type=int,
-	dest="loss_max_duration",
+	dest="los_max_duration",
 	default = 60,
 	help=" max number of minutes allowed to pass before loss of signal is declared"
 )
@@ -519,13 +453,9 @@ parser.add_argument(
 )
 
 parser.add_argument(
-	"--json-file",
+	"--export-settings",
 	type=str,
-	dest="json_file",
+	dest="json_filename",
 	default = "settings.json",
 	help="save configuration parameters to JSON file"
 )
-
-if __name__ == "__main__":
-	arguments = parser.parse_args()
-	main(**vars(arguments))
