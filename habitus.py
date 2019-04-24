@@ -389,14 +389,14 @@ def main(config_file, gps_path, acc_path):
             merged_data.count()
 
             # Save combined dataframe
-            merged_data.toPandas().to_csv('PALMS_output/' + output_filename + "{}.csv".format(str(id)), index=False)
+            merged_data.toPandas().to_csv('HABITUS_output/' + output_filename + "{}.csv".format(str(id)), index=False)
 
         else:
             # Save processed GPS data
-            gps_data.toPandas().to_csv('PALMS_output/' + file_gps + '-proc.csv', index=False)
+            gps_data.toPandas().to_csv('HABITUS_output/' + file_gps + '-proc.csv', index=False)
 
             # Save processed accelerometer data
-            acc_data.toPandas().to_csv('PALMS_output/' + file_acc + '-proc.csv', index=False)
+            acc_data.toPandas().to_csv('HABITUS_output/' + file_acc + '-proc.csv', index=False)
 
 
         # Remove all checkpoints
@@ -406,10 +406,10 @@ def main(config_file, gps_path, acc_path):
 
     # Merge output files in one single file
     if merge_data_to_gps:
-        list_procs = sorted(glob.glob("PALMS_output/*.csv"))
+        list_procs = sorted(glob.glob("HABITUS_output/*.csv"))
 
         header_saved = False
-        with open('PALMS_output/PALMS_output_all.csv', 'w') as fout:
+        with open('HABITUS_output/HABITUS_output_all.csv', 'w') as fout:
             for filename in list_procs:
                 with open(filename) as fin:
                     head = next(fin)

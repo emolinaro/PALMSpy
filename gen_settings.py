@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 from tools import Input
 import argparse
 
@@ -21,7 +22,8 @@ def main(interval=30, insert_missing=True, insert_until=False,
 		 merge_data_to_gps=True,
          driver_mem='16g', executor_mem='16g', mem_fraction=0.6, shuffle_partitions=20, mem_offHeap_enabled=True,
          mem_offHeap_size='16g', clean_checkpoints=True, codegen_wholeStage=False, codegen_fallback=True,
-         broadcast_timeout=1200, network_timeout='800s'):
+         broadcast_timeout=1200, network_timeout='800s',
+         json_file='settings.json'):
 
 
 	#TODO: add option to remove lone fixes
@@ -85,6 +87,10 @@ def main(interval=30, insert_missing=True, insert_until=False,
 	settings['spark']['sql']['codegen']['fallback'] = codegen_fallback
 	settings['spark']['sql']['broadcastTimeout'] = broadcast_timeout
 	settings['spark']['network']['timeout'] = network_timeout
+
+	# export parameters into JSON file
+	with open('result.json', 'w') as f:
+		json.dump(settings, f)
 
 	#print(settings)
 
@@ -512,6 +518,14 @@ parser.add_argument(
 	dest="network_timeout",
 	default = "800s",
 	help="default timeout for all network interactions"
+)
+
+parser.add_argument(
+	"--json-file",
+	type=str,
+	dest="json_file",
+	default = "settings.json",
+	help="save configuration parameters to JSON file"
 )
 
 if __name__ == "__main__":
