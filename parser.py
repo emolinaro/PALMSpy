@@ -17,14 +17,16 @@ requiredargs.add_argument(
     "--gps-path",
     type=str,
     dest="gps_path",
-    help="directory of GPS raw data"
+	default="",
+    help="directory of GPS raw data  %(default)s"
 )
 
 requiredargs.add_argument(
     "--acc-path",
     type=str,
     dest="acc_path",
-    help = "directory of accelerometer raw data"
+	default="",
+    help = "directory of accelerometer raw data  %(default)s"
 )
 
 parser.add_argument(
