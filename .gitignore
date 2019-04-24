@@ -1,0 +1,8 @@
+.DS_Store
+*.pyc
+data/
+.idea
+.ipynb_checkpoints/
+PALMS_output.csv
+checkpoint
+Calgary
