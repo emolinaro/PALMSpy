@@ -99,6 +99,7 @@ def main(gps_path, acc_path, config_file,
     if config_file == "":
         with open('settings.json', 'w') as f:
             json.dump(settings, f)
+        config_file = 'settings.json'
     else:
         file_settings = open(config_file, "r")
         with file_settings as f:
