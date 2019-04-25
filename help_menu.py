@@ -2,11 +2,10 @@ import argparse
 from tools import Metadata
 
 meta = Metadata()
-file = open("VERSION", "r")
 VER = meta.version
 program = meta.name
 
-# refer tot he program name: %(prog)s
+# refer to the program name: %(prog)s
 parser = argparse.ArgumentParser(
 	prog=meta.name,
 	usage='habitus --gps-path GPS_PATH --acc-path ACC_PATH [GPS options] [accelerometer options] [Spark options]',

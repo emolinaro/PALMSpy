@@ -9,8 +9,8 @@ with open("README.md", "r") as fh:
 setuptools.setup(
      name='habitus',
      version=meta.version,
-     scripts=['habitus.py'],
-     py_modules=['parser','gen_settings','GPSProcessing','AccProcessing','tools'],
+     scripts=['habitus.py','habitus'],
+     py_modules=['help_menu','gen_settings','GPSProcessing','AccProcessing','tools'],
      author=meta.authors,
      author_email=meta.email,
      description=meta.description,

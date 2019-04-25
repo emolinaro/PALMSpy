@@ -11,7 +11,7 @@ import os, sys
 import shutil
 import glob
 
-from parser import parser
+from help_menu import parser
 from GPSProcessing import *
 from AccProcessing import *
 
