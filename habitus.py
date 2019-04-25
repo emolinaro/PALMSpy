@@ -140,8 +140,8 @@ def main(gps_path, acc_path, config_file,
 
     # GPS parameters
     ################
-
     # TODO: add option to remove lone fixes
+
     ## general
     interval = settings['gps']['parameters']['general']['interval']
     insert_missing = settings['gps']['parameters']['general']['insert_missing']
