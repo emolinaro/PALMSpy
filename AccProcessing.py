@@ -7,8 +7,6 @@ from pyspark.sql.types import IntegerType
 import datefinder
 import time
 
-
-
 ##########################################################################################################
 
 def queryrows(df, string):

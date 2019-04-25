@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser(
 	prog=meta.name,
 	usage='habitus --gps-path GPS_PATH --acc-path ACC_PATH [GPS options] [accelerometer options] [Spark options]',
 	description="%(prog)s is an implementation of the Personal Activity and Location Measurement System (PALMS), written\
-	             in Python and integrated with Apache Spark to achive parallel computing.\
+	             in Python and integrated with Apache Spark for cluster-computing.\
 	             The program detects personal activity patterns of individual participants wearing\
                  a GPS data logger and a physical activity monitor.",
 	formatter_class=argparse.ArgumentDefaultsHelpFormatter

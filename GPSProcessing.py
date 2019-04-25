@@ -1,5 +1,4 @@
-from pyspark.conf import SparkConf
-from pyspark.sql import SparkSession, SQLContext, Row
+from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 from pyspark.sql.types import TimestampType
@@ -7,9 +6,6 @@ from pyspark.sql.types import IntegerType
 from pyspark.sql.types import DoubleType
 from math import *
 import numpy as np
-import time
-
-
 
 ##########################################################################################################
 

@@ -2,7 +2,6 @@
 # coding: utf-8
 
 from pyspark.conf import SparkConf
-from pyspark.sql import SparkSession
 import textwrap
 import json
 from tools import PColors as pc
