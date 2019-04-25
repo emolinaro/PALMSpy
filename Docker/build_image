@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+SOFTWARE=habitus
+VERSION=1.0
+
+/usr/local/bin/docker build -t $SOFTWARE:$VERSION  --force-rm .

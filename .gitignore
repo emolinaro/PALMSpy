@@ -3,9 +3,7 @@
 data/
 .idea
 .ipynb_checkpoints/
-PALMS_output.csv
 checkpoint
-Calgary
 build/
 dist/
 *.egg-info/
