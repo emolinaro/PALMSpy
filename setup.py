@@ -1,16 +1,19 @@
 import setuptools
+from tools import Metadata
+
+meta = Metadata()
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
      name='habitus',
-     version='1.0',
-     scripts=['habitus.py','parser.py','gen_settings.py','GPSProcessing.py','AccProcessing.py','parser.py','tools.py'],
-     author="Emiliano Molinaro",
-     author_email="emil.molinaro@gmail.com",
-     description="A program to detect personal activity patterns of individual participants wearing \
-                  a GPS data logger and a physical activity monitor",
+     version=meta.version,
+     scripts=['habitus.py'],
+     py_modules=['parser','gen_settings','GPSProcessing','AccProcessing','tools'],
+     author=meta.authors,
+     author_email=meta.email,
+     description=meta.description,
      long_description=long_description,
      long_description_content_type="text/markdown",
      url="https://github.com/emolinaro/HABITUS",

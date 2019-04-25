@@ -1,13 +1,14 @@
-#!/usr/bin/env python
-
 import argparse
+from tools import Metadata
 
+meta = Metadata()
 file = open("VERSION", "r")
-VER = str(file.read())
+VER = meta.version
+program = meta.name
 
 # refer tot he program name: %(prog)s
 parser = argparse.ArgumentParser(
-	prog='HABITUS',
+	prog=meta.name,
 	usage='habitus --gps-path GPS_PATH --acc-path ACC_PATH [GPS options] [accelerometer options] [Spark options]',
 	description="%(prog)s is an implementation of the Personal Activity and Location Measurement System (PALMS)\
 	             with Apache Spark. The program detects personal activity patterns of individual participants wearing\

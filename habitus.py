@@ -6,25 +6,27 @@ from pyspark.sql import SparkSession
 import textwrap
 import json
 from tools import PColors as pc
+from tools import Input, Metadata
 import os, sys
 import shutil
 import glob
-from tools import Input
-from parser import parser
 
+from parser import parser
 from GPSProcessing import *
 from AccProcessing import *
 
-def header():
-    file = open("VERSION", "r")
-    version = file.read()
+meta = Metadata()
 
+def header():
+
+    version = meta.version
+    program = meta.name
     print(" ")
     header = """
     ==========================
-    HABITUS v{} 
+    {} v{} 
     ==========================
-    """.format(str(version))
+    """.format(program, version)
 
     list = textwrap.wrap(header, width=30)
     for element in list:

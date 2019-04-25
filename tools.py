@@ -8,6 +8,13 @@ class PColors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+class Metadata:
+    name = 'HABITUS'
+    version = '1.0'
+    mantainer = 'Emiliano Molinaro'
+    email = 'emil.molinaro@gmail.com'
+    authors = 'Emiliano Molinaro'
+    description = 'A program to detect personal activity patterns of individual participants wearing a GPS data logger and a physical activity monitor'
 
 class Input:
 
