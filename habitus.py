@@ -22,7 +22,7 @@ def header():
     print(" ")
     header = """
     ==========================
-    Spark PALMS v{} 
+    HABITUS v{} 
     ==========================
     """.format(str(version))
 
@@ -50,8 +50,8 @@ def main(gps_path, acc_path, config_file,
          merge_data_to_gps,
          driver_mem, executor_mem, mem_fraction, shuffle_partitions, mem_offHeap_enabled,
          mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
-         broadcast_timeout, network_timeout,
-         json_filename):
+         broadcast_timeout, network_timeout):
+         #json_filename):
 
     if gps_path is None:
         print("Specify path to GPS data folder.\n")
@@ -94,7 +94,7 @@ def main(gps_path, acc_path, config_file,
     settings = params.dump_dict()
 
     #  Overwrite configuration parameters from file or save them to file
-    if config_file is None:
+    if config_file == "":
         with open('settings.json', 'w') as f:
             json.dump(settings, f)
     else:

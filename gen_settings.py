@@ -25,8 +25,8 @@ def main(interval=30, insert_missing=True, insert_until=False,
          broadcast_timeout=1200, network_timeout='800s',
          json_file='settings.json'):
 
-
 	#TODO: add option to remove lone fixes
+
 	params = Input()
 	settings = params.dump_dict()
 
@@ -89,8 +89,9 @@ def main(interval=30, insert_missing=True, insert_until=False,
 	settings['spark']['network']['timeout'] = network_timeout
 
 	# export parameters into JSON file
-	with open('result.json', 'w') as f:
+	with open(json_file, 'w') as f:
 		json.dump(settings, f)
+		print("HABITUS settings exported in {}".format(json_file))
 
 # refer tot he program name: %(prog)s
 parser = argparse.ArgumentParser(
