@@ -136,11 +136,12 @@ def main(gps_path, acc_path, config_file,
     list_file_gps = sorted(os.listdir(gps_path))
     list_combined = list(zip(list_file_acc, list_file_gps))
 
-    output_filename = 'proc_'
+    output_filename = 'partial_'
 
     # GPS parameters
     ################
 
+    # TODO: add option to remove lone fixes
     ## general
     interval = settings['gps']['parameters']['general']['interval']
     insert_missing = settings['gps']['parameters']['general']['insert_missing']
@@ -438,14 +439,17 @@ def main(gps_path, acc_path, config_file,
 
             # Save combined dataframe
             merged_data.toPandas().to_csv('HABITUS_output/' + output_filename + "{}.csv".format(str(id)), index=False)
-
+            print(pc.WARNING + " ===> merged dataframe saved as " + output_filename + "{}.csv".format(str(id)) + pc.ENDC)
+            print("\n")
         else:
             # Save processed GPS data
-            gps_data.toPandas().to_csv('HABITUS_output/' + file_gps + '-proc.csv', index=False)
+            gps_data.toPandas().to_csv('HABITUS_output/' + file_gps + '-gps.csv', index=False)
+            print(pc.WARNING + " ===> GPS processed data saved as {}-gps.csv".format(file_gps) + pc.ENDC)
 
             # Save processed accelerometer data
-            acc_data.toPandas().to_csv('HABITUS_output/' + file_acc + '-proc.csv', index=False)
-
+            acc_data.toPandas().to_csv('HABITUS_output/' + file_acc + '-acc.csv', index=False)
+            print(pc.WARNING + " ===> accelerometer processed data saved as {}-acc.csv".format(file_acc) + pc.ENDC)
+            print("\n")
 
         # Remove all checkpoints
         shutil.rmtree('checkpoints')
@@ -466,34 +470,10 @@ def main(gps_path, acc_path, config_file,
                         header_saved = True
                     for line in fin:
                         fout.write(line)
-"""
-parser = argparse.ArgumentParser(
-    description="Implementation of Personal Activity and Location Measurement System (PALMS) with Apache Spark.",
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter
-)
 
-parser.add_argument(
-    "--config-file",
-    default="settings.json",
-    type=str,
-    dest="config_file",
-    help="JSON file with configuration settings"
-)
+    # Copy JSON config file into output folder
+    shutil.copy(config_file, 'HABITUS_output/')
 
-parser.add_argument(
-    "--gps-path",
-    type=str,
-    dest="gps_path",
-    help="directory of GPS raw data"
-)
-
-parser.add_argument(
-    "--acc-path",
-    type=str,
-    dest="acc_path",
-    help = "directory of accelerometer raw data"
-)
-"""
 if __name__ == "__main__":
     arguments = parser.parse_args()
     main(**vars(arguments))
