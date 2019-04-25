@@ -474,7 +474,7 @@ def main(gps_path, acc_path, config_file,
                         header_saved = True
                     for line in fin:
                         fout.write(line)
-    
+
     # Copy JSON config file into output folder
     shutil.copy(config_file, 'HABITUS_output/')
 
