@@ -62,20 +62,20 @@ class Input:
 
                                     "general": {
                                         "interval": 30,
-                                        "insert_missing": True,
+                                        "insert_missing": False,
                                         "insert_until": False,
                                         "insert_max_seconds": 600,
                                         "los_max_duration": 60
                                     },
                                     "filter_options": {
-                                        "remove_lone_fixes": False,
-                                        "filter_invalid_values": True,
+                                        "remove_lone_fixes": True,
+                                        "filter_invalid_values": False,
                                         "max_speed":130,
                                         "max_ele_change":1000,
                                         "min_change_3_fixes":10
                                     },
                                     "trip_detection": {
-                                        "detect_trip": True,
+                                        "detect_trip": False,
                                         "min_distance" : 34,
                                         "min_trip_length": 100,
                                         "min_trip_duration": 180,
@@ -83,7 +83,7 @@ class Input:
                                         "max_pause_duration": 300
                                     },
                                     "mode_of_transportation": {
-                                        "detect_trip_mode": True,
+                                        "detect_trip_mode": False,
                                         "vehicle_cutoff": 25,
                                         "bicycle_cutoff": 10,
                                         "walk_cutoff": 1,
@@ -100,12 +100,12 @@ class Input:
                                 "include_vect": False,
                                 "not_wearing_time":
                                 {
-                                    "mark_not_wearing_time": True,
+                                    "mark_not_wearing_time": False,
                                     "minutes_zeros_row": 30
                                 },
                                 "activity_bout":
                                 {
-                                    "detect_activity_bouts": True,
+                                    "detect_activity_bouts": False,
                                     "activity_bout_duration": 5,
                                     "activity_bout_upper_limit": 9999,
                                     "activity_bout_lower_limit": 1953,
@@ -113,7 +113,7 @@ class Input:
                                 },
                                 "sedentary_bout":
                                 {
-                                    "detect_sedentary_bouts": True,
+                                    "detect_sedentary_bouts": False,
                                     "sedentary_bout_duration": 30,
                                     "sedentary_bout_upper_limit": 100,
                                     "sedentary_bout_tolerance": 1
@@ -129,7 +129,7 @@ class Input:
                         },
                         "merge_options":
                         {
-                            "merge_data_to_gps": True
+                            "merge_data_to_gps": False
                         }
                     }
 

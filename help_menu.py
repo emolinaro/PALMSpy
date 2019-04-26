@@ -65,21 +65,17 @@ gpsargs.add_argument(
 
 gpsargs.add_argument(
 	"--insert-missing",
-	type=bool,
-	metavar='BOOL',
 	dest="insert_missing",
-	default = True,
-	help="if true, gaps in GPS fixes are replaced by the last valid fix"
+	action='store_true',
+	help="gaps in GPS fixes are replaced by the last valid fix"
 )
 
 gpsargs.add_argument(
 	"--insert-until",
-	type=bool,
-	metavar='BOOL',
 	dest="insert_until",
-	default = False,
-	help="if true, inserts until a max time (set by --insert-max-seconds) is reached.\
-	      If false, inserts will be added until loss of signal time is reached"
+	action='store_true',
+	help="inserts until a max time (set by --insert-max-seconds) is reached;\
+	      by default, inserts will be added until loss of signal time is reached"
 )
 
 gpsargs.add_argument(
@@ -102,11 +98,9 @@ gpsargs.add_argument(
 
 gpsargs.add_argument(
 	"--filter-invalid-values",
-	type=bool,
-	metavar='BOOL',
 	dest="filter_invalid_values",
-	default = True,
-	help="if true, removes invalid fixes"
+	action='store_true',
+	help="remove invalid fixes"
 )
 
 gpsargs.add_argument(
@@ -138,11 +132,9 @@ gpsargs.add_argument(
 
 gpsargs.add_argument(
 	"--detect-trip",
-	type=bool,
-	metavar='BOOL',
 	dest="detect_trip",
-	default = True,
-	help="if true, calculates the fix trip type: STATIONARY (0), START POINT (1), MID POINT (2), PAUSE POINT (3),\
+	action='store_true',
+	help="calculate the fix trip type: STATIONARY (0), START POINT (1), MID POINT (2), PAUSE POINT (3),\
 	      and END POINT (4)"
 )
 
@@ -194,11 +186,9 @@ gpsargs.add_argument(
 
 gpsargs.add_argument(
 	"--detect-trip-mode",
-	type=bool,
-	metavar='BOOL',
 	dest="detect_trip_mode",
-	default = True,
-	help="if true, calculates the mode of transportation based on the speed: STATIONARY (0),\
+	action='store_true',
+	help="calculate the mode of transportation based on the speed: STATIONARY (0),\
 	      PEDESTRIAN (1), BICYCLE (2), and VEHICLE (3)"
 )
 
@@ -250,29 +240,23 @@ gpsargs.add_argument(
 # Accelerometer options
 accargs.add_argument(
 	"--include-acc",
-	type=bool,
-	metavar='BOOL',
 	dest="include_acc",
-	default = False,
-	help="if true, all measured accelerometer data are attached to the final output"
+	action='store_true',
+	help="append all accelerometer data to the final output"
 )
 
 accargs.add_argument(
 	"--include-vect",
-	type=bool,
-	metavar='BOOL',
 	dest="include_vect",
-	default = False,
-	help="if true, the activity intensity is calculated from the accelerometer vector magnitude"
+	action='store_true',
+	help="calculate the activity intensity from the accelerometer vector magnitude"
 )
 
 accargs.add_argument(
 	"--mark-not-wearing",
-	type=bool,
-	metavar='BOOL',
 	dest="mark_not_wearing_time",
-	default = True,
-	help="if true, it will mark not-wearing time (set actvity count and activity intensity equal to -2)"
+	action='store_true',
+	help="mark not-wearing time (set actvity count and activity intensity equal to -2)"
 )
 
 accargs.add_argument(
@@ -286,11 +270,9 @@ accargs.add_argument(
 
 accargs.add_argument(
 	"--detect-activity-bouts",
-	type=bool,
-	metavar='BOOL',
 	dest="detect_activity_bouts",
-	default = True,
-	help="if true, it will detect activity bouts"
+	action='store_true',
+	help="detect activity bouts"
 )
 
 accargs.add_argument(
@@ -331,11 +313,9 @@ accargs.add_argument(
 
 accargs.add_argument(
 	"--detect-sedentary-bouts",
-	type=bool,
-	metavar='BOOL',
 	dest="detect_sedentary_bouts",
-	default = True,
-	help="if true, it will detect sedentary bouts"
+	action='store_true',
+	help="detect sedentary bouts"
 )
 
 accargs.add_argument(
@@ -404,12 +384,10 @@ accargs.add_argument(
 # Merge options
 mergeargs.add_argument(
 	"--merge-acc-to-gps",
-	type=bool,
-	metavar='BOOL',
 	dest="merge_data_to_gps",
-	default = True,
-	help="if true, the accelerometer data will be merged to the GPS data and exported in one single file.\
-	      If, false, the processed accelerometer and GPS data will be saved in two different files"
+	action='store_true',
+	help="merge accelerometer data to GPS data and export them in one single file;\
+	      by default, the processed accelerometer and GPS data will be saved in two different files"
 )
 
 # Spark options
@@ -456,10 +434,8 @@ sparkargs.add_argument(
 
 sparkargs.add_argument(
 	"--mem-offHeap-enabled",
-	type=bool,
-	metavar='BOOL',
 	dest="mem_offHeap_enabled",
-	default = True,
+	action='store_false',
 	help="if true, off-heap memory will be used for certain operations.\
 	      If off-heap memory use is enabled, then --mem-offHeap-size must be positive"
 )
@@ -476,28 +452,22 @@ sparkargs.add_argument(
 
 sparkargs.add_argument(
 	"--clean-checkpoints",
-	type=bool,
-	metavar='BOOL',
 	dest="clean_checkpoints",
-	default = True,
+	action='store_false',
 	help="controls whether to clean checkpoint files if the reference is out of scope"
 )
 
 sparkargs.add_argument(
 	"--codegen-wholeStage",
-	type=bool,
-	metavar='BOOL',
 	dest="codegen_wholeStage",
-	default = False,
+	action='store_true',
 	help="enable whole-stage code generation (experimental)"
 )
 
 sparkargs.add_argument(
 	"--codegen-fallback",
-	type=bool,
-	metavar='BOOL',
 	dest="codegen_fallback",
-	default = True,
+	action='store_false',
 	help="when true, whole-stage codegen could be temporary disabled for the part of query that\
           fails to compile generated code"
 )
