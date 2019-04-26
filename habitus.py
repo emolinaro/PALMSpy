@@ -116,8 +116,7 @@ def main(gps_path, acc_path, config_file,
                                ('spark.sql.codegen.wholeStage', settings['spark']['sql']['codegen']['wholeStage']),
                                ('spark.sql.broadcastTimeout', settings['spark']['sql']['broadcastTimeout']),
                                ('spark.network.timeout', settings['spark']['network']['timeout']),
-                               ('spark.sql.codegen.fallback', settings['spark']['sql']['codegen']['fallback']),
-                               ('spark.executor.extraJavaOptions', '-XX:ReservedCodeCacheSize=384m -XX:+UseCodeCacheFlushing')
+                               ('spark.sql.codegen.fallback', settings['spark']['sql']['codegen']['fallback'])
                                ]
                               )
     # ('spark.driver.host', 'localhost') # TODO: allows to pass configs with spark-submit, without spark.conf file
