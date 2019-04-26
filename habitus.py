@@ -321,7 +321,7 @@ def main(gps_path, acc_path, config_file,
             print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
             print(" ")
 
-            print(pc.WARNING + " ===> apply accelaration filter..." + pc.ENDC)
+            print(pc.WARNING + " ===> apply acceleration filter..." + pc.ENDC)
             start_time = time.time()
             gps_data = filter_acceleration(gps_data, speed_col, ts_name).cache()
             gps_data = gps_data.checkpoint()

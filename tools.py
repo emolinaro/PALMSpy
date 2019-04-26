@@ -65,7 +65,7 @@ class Input:
                                         "insert_missing": False,
                                         "insert_until": False,
                                         "insert_max_seconds": 600,
-                                        "los_max_duration": 60
+                                        "los_max_duration": 600
                                     },
                                     "filter_options": {
                                         "remove_lone_fixes": True,

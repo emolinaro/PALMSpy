@@ -92,8 +92,8 @@ gpsargs.add_argument(
 	type=int,
 	metavar='INT',
 	dest="los_max_duration",
-	default = 60,
-	help=" max number of minutes allowed to pass before loss of signal is declared"
+	default = 600,
+	help=" max number of seconds allowed to pass before loss of signal is declared"
 )
 
 gpsargs.add_argument(
