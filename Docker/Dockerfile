@@ -9,11 +9,11 @@ MAINTAINER Emiliano Molinaro <emil.molinaro@gmail.com>
 LABEL org.label-schema.name="HABITUS v$HABITUS_VERSION" \
       org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.version=$HABITUS_VERSION \
-      authors = "Emiliano Molinaro" \
-      description = "HABITUS is an implementation of the Personal Activity and Location Measurement System (PALMS),\
-                     written in Python and integrated with Apache Spark for cluster-computing.\
-	                 The program detects personal activity patterns of individual participants wearing\
-                     a GPS data logger and a physical activity monitor.""
+      authors="Emiliano Molinaro" \
+      description="HABITUS is an implementation of the Personal Activity and Location Measurement System (PALMS),\
+                   written in Python and integrated with Apache Spark for cluster-computing.\
+	               The program detects personal activity patterns of individual participants wearing\
+                   a GPS data logger and a physical activity monitor."
 
 ENV PATH="/opt/miniconda3/bin:${PATH}"
 ENV PYSPARK_PYTHON="/opt/miniconda3/bin/python"
