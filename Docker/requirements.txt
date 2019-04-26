@@ -1,7 +1,8 @@
 pandas 
+numpy
 pytz 
 pyzmq 
-regex 
+regex
 tzwhere 
 Datetime 
 datefinder

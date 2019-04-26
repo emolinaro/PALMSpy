@@ -11,15 +11,16 @@ LABEL org.label-schema.name="HABITUS v$HABITUS_VERSION" \
       org.label-schema.version=$HABITUS_VERSION \
       authors="Emiliano Molinaro" \
       description="HABITUS is an implementation of the Personal Activity and Location Measurement System (PALMS),\
-                   written in Python and integrated with Apache Spark for cluster-computing.\
-	               The program detects personal activity patterns of individual participants wearing\
-                   a GPS data logger and a physical activity monitor."
+written in Python and integrated with Apache Spark for cluster-computing.\
+The program detects personal activity patterns of individual participants wearing\
+a GPS data logger and a physical activity monitor."
 
 ENV PATH="/opt/miniconda3/bin:${PATH}"
 ENV PYSPARK_PYTHON="/opt/miniconda3/bin/python"
 
 RUN apt-get update && \
     apt-get install -y curl bzip2 --no-install-recommends && \
+    apt-get install -y libblas-dev libatlas-base-dev && \
     curl -s --url "https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh" --output /tmp/miniconda.sh && \
     bash /tmp/miniconda.sh -b -f -p "/opt/miniconda3" && \
     rm /tmp/miniconda.sh && \
@@ -46,7 +47,9 @@ WORKDIR /work
 COPY requirements.txt requirements.txt
 COPY habitus-${HABITUS_VERSION}-py3-none-any.whl habitus-${HABITUS_VERSION}-py3-none-any.whl
 
-RUN $PYSPARK_PYTHON -m pip install habitus-${HABITUS_VERSION}-py3-none-any.whl
+RUN pip install -r requirements.txt && \
+    $PYSPARK_PYTHON -m pip install habitus-${HABITUS_VERSION}-py3-none-any.whl && \
+    rm *.txt *.whl
 
 #ENTRYPOINT ["spark-submit"]
 ENTRYPOINT ["habitus"]
