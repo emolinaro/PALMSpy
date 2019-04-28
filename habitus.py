@@ -77,9 +77,8 @@ def main(gps_path, acc_path, config_file,
 		 driver_mem, executor_mem, mem_fraction, shuffle_partitions, mem_offHeap_enabled,
 		 mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
 		 broadcast_timeout, network_timeout):
-		 #json_filename):
 
-	program_start = start_time = time.time()
+	program_start = time.time()
 
 	if gps_path is None:
 		print("Specify path to GPS data folder.\n")
@@ -166,7 +165,7 @@ def main(gps_path, acc_path, config_file,
 	list_file_gps = sorted(os.listdir(gps_path))
 	list_combined = list(zip(list_file_acc, list_file_gps))
 
-	output_filename = 'partial_'
+	output_filename = 'dataset_'
 
 	# GPS parameters
 	################
@@ -492,15 +491,16 @@ def main(gps_path, acc_path, config_file,
 		list_procs = sorted(glob.glob("HABITUS_output/*.csv"))
 
 		header_saved = False
-		with open('HABITUS_output/HABITUS_output_all.csv', 'w') as fout:
-			for filename in list_procs:
-				with open(filename) as fin:
-					head = next(fin)
-					if not header_saved:
-						fout.write(head)
-						header_saved = True
-					for line in fin:
-						fout.write(line)
+		if len(list_procs) > 1:
+			with open('HABITUS_output/HABITUS_output_all.csv', 'w') as fout:
+				for filename in list_procs:
+					with open(filename) as fin:
+						head = next(fin)
+						if not header_saved:
+							fout.write(head)
+							header_saved = True
+						for line in fin:
+							fout.write(line)
 
 	# Copy JSON config file into output folder
 	shutil.copy(config_file, 'HABITUS_output/')
