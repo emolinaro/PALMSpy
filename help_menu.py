@@ -392,14 +392,14 @@ mergeargs.add_argument(
 
 # Spark options
 sparkargs.add_argument(
-	"--mem-fraction",
-	type=float,
-	metavar='FLOAT',
-	dest="mem_fraction",
-	default = 0.6,
-	help="expresses the size of the execution and storage memory as a fraction of the (JVM heap space - 300MB).\
-          The rest of the space (40%%) is reserved for user data structures, internal metadata in Spark,\
-          and safeguarding against OOM errors in the case of sparse and unusually large records"
+	"--driver-mem",
+	type=str,
+	metavar='STR',
+	dest="driver_mem",
+	default = '16g',
+	help="amount of memory to use for the driver process,\
+	      i.e. where SparkContext is initialized, in the same format as JVM memory strings\
+	      with a size unit suffix (\"k\", \"m\", \"g\" or \"t\")"
 )
 
 sparkargs.add_argument(
@@ -413,14 +413,14 @@ sparkargs.add_argument(
 )
 
 sparkargs.add_argument(
-	"--driver-mem",
-	type=str,
-	metavar='STR',
-	dest="driver_mem",
-	default = '16g',
-	help="amount of memory to use for the driver process,\
-	      i.e. where SparkContext is initialized, in the same format as JVM memory strings\
-	      with a size unit suffix (\"k\", \"m\", \"g\" or \"t\")"
+	"--mem-fraction",
+	type=float,
+	metavar='FLOAT',
+	dest="mem_fraction",
+	default = 0.6,
+	help="expresses the size of the execution and storage memory as a fraction of the (JVM heap space - 300MB).\
+          The rest of the space (40%%) is reserved for user data structures, internal metadata in Spark,\
+          and safeguarding against OOM errors in the case of sparse and unusually large records"
 )
 
 sparkargs.add_argument(
