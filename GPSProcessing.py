@@ -283,7 +283,8 @@ def set_fix_type(df, ts_name, ws):
                           .otherwise(F.col('fixTypeCode'))
                         )
     
-    # TODO: filter out 'lone fixes'
+    # Filter out 'lone fixes'
+    df2 = df2.filter(F.col('fixTypeCode') != 5).orderBy(ts_name)
    
     # Set 'last fix'
     df2 = df2.withColumn('fixTypeCode', 

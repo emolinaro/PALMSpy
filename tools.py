@@ -68,7 +68,7 @@ class Input:
                                         "los_max_duration": 600
                                     },
                                     "filter_options": {
-                                        "remove_lone_fixes": False,
+                                        "remove_lone_fixes": True,
                                         "filter_invalid_values": False,
                                         "max_speed":130,
                                         "max_ele_change":1000,
