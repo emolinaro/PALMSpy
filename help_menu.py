@@ -359,7 +359,7 @@ accargs.add_argument(
 	type=int,
 	metavar='INT',
 	dest="hard_cutoff",
-	default = 9498,
+	default = 5725,
 	help="hard activity cutoff value"
 )
 
