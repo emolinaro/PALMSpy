@@ -23,7 +23,7 @@ mergeargs = parser.add_argument_group('merge options')
 sparkargs = parser.add_argument_group('Spark options')
 
 requiredargs.add_argument(
-    "--gps-path", "-gp",
+    "--gps-path",
     type=str,
     dest="gps_path",
 	default="",
@@ -31,7 +31,7 @@ requiredargs.add_argument(
 )
 
 requiredargs.add_argument(
-    "--acc-path", "-ap",
+    "--acc-path",
     type=str,
     dest="acc_path",
 	default="",
@@ -39,7 +39,7 @@ requiredargs.add_argument(
 )
 
 parser.add_argument(
-    "--config-file", "-cf",
+    "--config-file",
     default="",
     type=str,
 	metavar='FILE',
