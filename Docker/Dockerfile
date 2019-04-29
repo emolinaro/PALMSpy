@@ -52,5 +52,5 @@ RUN pip install -r requirements.txt && \
     rm *.txt *.whl
 
 #ENTRYPOINT ["spark-submit"]
-ENTRYPOINT ["habitus"]
-CMD ["--help"]
+#ENTRYPOINT ["habitus"]
+#CMD ["--help"]
