@@ -440,7 +440,7 @@ def main(gps_path, acc_path, config_file,
 
 			print(pc.WARNING + " ===> fill in missing value..." + pc.ENDC)
 			start_time = time.time()
-			gps_data = fill_timestamp(gps_data, ts_name, fix_type_col, step, insert_max_seconds).cache()
+			gps_data = fill_timestamp(gps_data, ts_name, fix_type_col, interval, insert_max_seconds).cache()
 			gps_data = gps_data.checkpoint()
 			gps_data.count()
 			elapsed_time = time.time() - start_time
