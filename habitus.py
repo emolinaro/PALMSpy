@@ -114,7 +114,7 @@ def main(gps_path, acc_path, config_file,
 		 detect_sedentary_bouts, sedentary_bout_duration,
 		 sedentary_bout_upper_limit, sedentary_bout_tolerance,
 		 very_hard_cutoff, hard_cutoff, moderate_cutoff, light_cutoff,
-		 merge_data_to_gps,
+		 merge_data_to_gps, merge_data_to_acc,
 		 driver_mem, executor_mem, mem_fraction, shuffle_partitions, mem_offHeap_enabled,
 		 mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
 		 broadcast_timeout, network_timeout)
@@ -230,6 +230,7 @@ def main(gps_path, acc_path, config_file,
 
 	# Merge options
 	merge_data_to_gps = settings['merge_options']['merge_data_to_gps']
+	merge_data_to_acc = settings['merge_options']['merge_data_to_acc']
 
 	print(" ")
 
@@ -400,7 +401,7 @@ def main(gps_path, acc_path, config_file,
 			time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
 		print(" ")
 
-		#gps_data = gps_data.limit(100) ######################################<<<<<<<<<<<<<<<
+		gps_data = gps_data.limit(100) ######################################<<<<<<<<<<<<<<<
 
 		# Trip detection
 		if trip_detection:
@@ -450,7 +451,7 @@ def main(gps_path, acc_path, config_file,
 
 		# Merge dataframes
 		if merge_data_to_gps:
-			print(pc.OKBLUE + pc.UNDERLINE + "merge GPS and accelerometer data\n" + pc.ENDC)
+			print(pc.OKBLUE + pc.UNDERLINE + "merge accelerometer data to GPS data\n" + pc.ENDC)
 
 			merged_data = gps_data.join(acc_data, [ts_name], how='left').orderBy(ts_name)
 
@@ -460,7 +461,22 @@ def main(gps_path, acc_path, config_file,
 			cols.insert(0, 'ID')
 
 			merged_data = merged_data.select(cols).orderBy(ts_name).cache()
+			merged_data = merged_data.checkpoint()
+			merged_data.count()
 
+			# Save combined dataframe
+			merged_data.toPandas().to_csv('HABITUS_output/' + output_filename + "{}.csv".format(str(id)), index=False)
+			print(pc.WARNING + " ===> merged dataframe saved in: " + output_filename + "{}.csv".format(str(id)) + pc.ENDC)
+			print("\n")
+		elif merge_data_to_acc:
+			print(pc.OKBLUE + pc.UNDERLINE + "merge accelerometer data to GPS data\n" + pc.ENDC)
+			merged_data = acc_data.join(gps_data, [ts_name], how='left').orderBy(ts_name)
+
+			## change order of the columns
+			cols = merged_data.columns
+			cols.remove('ID')
+
+			merged_data = merged_data.select(cols).orderBy(ts_name).cache()
 			merged_data = merged_data.checkpoint()
 			merged_data.count()
 

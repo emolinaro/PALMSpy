@@ -129,7 +129,8 @@ class Input:
                         },
                         "merge_options":
                         {
-                            "merge_data_to_gps": False
+                            "merge_data_to_gps": False,
+                            "merge_data_to_acc": False
                         }
                     }
 
@@ -151,7 +152,7 @@ class Input:
          detect_sedentary_bouts, sedentary_bout_duration,
          sedentary_bout_upper_limit, sedentary_bout_tolerance,
          very_hard_cutoff, hard_cutoff, moderate_cutoff, light_cutoff,
-         merge_data_to_gps,
+         merge_data_to_gps, merge_data_to_acc,
          driver_mem, executor_mem, mem_fraction, shuffle_partitions, mem_offHeap_enabled,
          mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
          broadcast_timeout, network_timeout):
@@ -203,6 +204,7 @@ class Input:
 
         # Merge options
         self.data['merge_options']['merge_data_to_gps'] = merge_data_to_gps
+        self.data['merge_options']['merge_data_to_acc'] = merge_data_to_acc
 
         # Spark parameters
         self.data['spark']['memory']['fraction'] = mem_fraction

@@ -390,6 +390,14 @@ mergeargs.add_argument(
 	      by default, the processed accelerometer and GPS data will be saved in two different files"
 )
 
+mergeargs.add_argument(
+	"--merge-gps-to-acc",
+	dest="merge_data_to_acc",
+	action='store_true',
+	help="merge GPS data to accelerometer data and export them in one single file;\
+	      by default, the processed accelerometer and GPS data will be saved in two different files"
+)
+
 # Spark options
 sparkargs.add_argument(
 	"--driver-mem",
