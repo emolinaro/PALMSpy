@@ -59,24 +59,24 @@ def header():
 	pass
 
 def main(gps_path, acc_path, config_file,
-		 interval, insert_missing, insert_until,
-		 insert_max_seconds, los_max_duration, filter_invalid_values,
-		 max_speed, max_ele_change, min_change_3_fixes,
-		 detect_trip, min_distance, min_trip_length, min_trip_duration,
-		 min_pause_duration, max_pause_duration, detect_trip_mode,
-		 vehicle_cutoff, bicycle_cutoff, walk_cutoff,
-		 percentile_to_sample, min_segment_length,
-		 include_acc, include_vect,
-		 mark_not_wearing_time, minutes_zeros_row,
-		 detect_activity_bouts, activity_bout_duration,
-		 activity_bout_upper_limit, activity_bout_lower_limit, activity_bout_tolerance,
-		 detect_sedentary_bouts, sedentary_bout_duration,
-		 sedentary_bout_upper_limit, sedentary_bout_tolerance,
-		 very_hard_cutoff, hard_cutoff, moderate_cutoff, light_cutoff,
-		 merge_data_to_gps,
-		 driver_mem, executor_mem, mem_fraction, shuffle_partitions, mem_offHeap_enabled,
-		 mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
-		 broadcast_timeout, network_timeout):
+         interval, insert_missing, insert_until,
+         insert_max_seconds, los_max_duration, filter_invalid_values,
+         max_speed, max_ele_change, min_change_3_fixes,
+         detect_trip, min_distance, min_trip_length, min_trip_duration,
+         min_pause_duration, max_pause_duration, detect_trip_mode,
+         vehicle_cutoff, bicycle_cutoff, walk_cutoff,
+         percentile_to_sample, min_segment_length,
+         include_acc, include_vect,
+         mark_not_wearing_time, minutes_zeros_row,
+         detect_activity_bouts, activity_bout_duration,
+         activity_bout_upper_limit, activity_bout_lower_limit, activity_bout_tolerance,
+         detect_sedentary_bouts, sedentary_bout_duration,
+         sedentary_bout_upper_limit, sedentary_bout_tolerance,
+         very_hard_cutoff, hard_cutoff, moderate_cutoff, light_cutoff,
+         merge_data_to_gps, merge_data_to_acc,
+         driver_mem, executor_mem, mem_fraction, shuffle_partitions, mem_offHeap_enabled,
+         mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
+         broadcast_timeout, network_timeout):
 
 	program_start = time.time()
 
