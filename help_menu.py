@@ -253,10 +253,10 @@ accargs.add_argument(
 )
 
 accargs.add_argument(
-	"--mark-not-wearing",
+	"--mark-non-wearing",
 	dest="mark_not_wearing_time",
 	action='store_true',
-	help="mark not-wearing time (set actvity count and activity intensity equal to -2)"
+	help="mark non-wearing time (set actvity count and activity intensity equal to -2)"
 )
 
 accargs.add_argument(
@@ -265,7 +265,7 @@ accargs.add_argument(
 	metavar='INT',
 	dest="minutes_zeros_row",
 	default = 30,
-	help="minimum not-wearing time, corresponding to consecutive zeros in the activity count"
+	help="minimum non-wearing time (in minutes), corresponding to consecutive zeros in the activity count"
 )
 
 accargs.add_argument(
