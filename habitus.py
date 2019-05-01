@@ -122,13 +122,14 @@ def main(gps_path, acc_path, config_file,
 
 	#  Overwrite configuration parameters from file or save them to file
 	if config_file == "":
-		with open('settings.json', 'w') as f:
+		with open('HABITUS_output/settings.json', 'w') as f:
 			json.dump(settings, f)
-		config_file = 'settings.json'
 	else:
 		file_settings = open(config_file, "r")
 		with file_settings as f:
 			settings = json.load(f)
+		## copy JSON config file into output folder
+		shutil.copy(config_file, 'HABITUS_output/')
 
 	# Set Spark configuration parameters
 	conf = SparkConf().setAll([('spark.memory.fraction', settings['spark']['memory']['fraction']),
@@ -165,7 +166,7 @@ def main(gps_path, acc_path, config_file,
 	list_file_gps = sorted(os.listdir(gps_path))
 	list_combined = list(zip(list_file_acc, list_file_gps))
 
-	output_filename = 'dataset_'
+	output_filename = 'habitus'
 
 	# GPS parameters
 	################
@@ -306,6 +307,14 @@ def main(gps_path, acc_path, config_file,
 				time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
 			print(" ")
 
+		acc_data = acc_data.withColumn('ID', F.lit(id)).orderBy(ts_name)
+		cols = acc_data.columns
+		cols.remove('ID')
+		cols.insert(0, 'ID')
+		acc_data = acc_data.select(cols).orderBy(ts_name).cache()
+		acc_data = acc_data.checkpoint()
+		acc_data.count()
+
 		print(pc.OKGREEN + "Dataset: {}".format(file_gps) + pc.ENDC)
 		print(" ")
 
@@ -321,7 +330,7 @@ def main(gps_path, acc_path, config_file,
 		time_format = 'HH:mm:ss'
 		datetime_format = date_format + ' ' + time_format
 
-		gps_data = gen_gps_dataframe(gps_data_raw, datetime_format, id).cache()
+		gps_data = gen_gps_dataframe(gps_data_raw, datetime_format).cache()
 		gps_data = gps_data.checkpoint()
 		gps_data.count()
 
@@ -401,7 +410,7 @@ def main(gps_path, acc_path, config_file,
 			time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
 		print(" ")
 
-		gps_data = gps_data.limit(100) ######################################<<<<<<<<<<<<<<<
+		#gps_data = gps_data.limit(100) ######################################<<<<<<<<<<<<<<<
 
 		# Trip detection
 		if trip_detection:
@@ -449,50 +458,72 @@ def main(gps_path, acc_path, config_file,
 				time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
 			print(" ")
 
+		gps_data = gps_data.withColumn('ID', F.lit(id)).orderBy(ts_name)
+		cols = gps_data.columns
+		cols.remove('ID')
+		cols.insert(0, 'ID')
+		gps_data = gps_data.select(cols).orderBy(ts_name).cache()
+		gps_data = gps_data.checkpoint()
+		gps_data.count()
+
 		# Merge dataframes
 		if merge_data_to_gps:
 			print(pc.OKBLUE + pc.UNDERLINE + "merge accelerometer data to GPS data\n" + pc.ENDC)
 
-			merged_data = gps_data.join(acc_data, [ts_name], how='left').orderBy(ts_name)
+			merged_data = gps_data.join(acc_data, ['ID', ts_name], how='left').orderBy(ts_name)
 
-			## change order of the columns
-			cols = merged_data.columns
-			cols.remove('ID')
-			cols.insert(0, 'ID')
-
-			merged_data = merged_data.select(cols).orderBy(ts_name).cache()
+			merged_data = merged_data.cache()
 			merged_data = merged_data.checkpoint()
 			merged_data.count()
 
 			# Save combined dataframe
-			merged_data.toPandas().to_csv('HABITUS_output/' + output_filename + "{}.csv".format(str(id)), index=False)
-			print(pc.WARNING + " ===> merged dataframe saved in: " + output_filename + "{}.csv".format(str(id)) + pc.ENDC)
-			print("\n")
-		elif merge_data_to_acc:
-			print(pc.OKBLUE + pc.UNDERLINE + "merge accelerometer data to GPS data\n" + pc.ENDC)
-			merged_data = acc_data.join(gps_data, [ts_name], how='left').orderBy(ts_name)
+			merged_data.toPandas().to_csv('HABITUS_output/' + output_filename + "_gps_acc_{}.csv".format(str(id)), index=False)
+			print(pc.WARNING + " ===> merged dataframe saved in: " + output_filename + "_gps_acc_{}.csv".format(str(id)) + pc.ENDC)
+			print(" ")
 
-			## change order of the columns
-			cols = merged_data.columns
-			cols.remove('ID')
+		if merge_data_to_acc:
+			print(pc.OKBLUE + pc.UNDERLINE + "merge GPS data to accelerometer data\n" + pc.ENDC)
+			merged_data = acc_data.join(gps_data, ['ID', ts_name], how='left').orderBy(ts_name)
 
-			merged_data = merged_data.select(cols).orderBy(ts_name).cache()
+			merged_data = merged_data.withColumn(fix_type_col, F.when(F.col(fix_type_col).isNotNull(),
+			                                                          F.col(fix_type_col).cast(IntegerType())
+			                                                         )
+			                                     ).orderBy(ts_name)
+			if trip_detection:
+				merged_data = merged_data.withColumn('tripType', F.when(F.col('tripType').isNotNull(),
+				                                                        F.col('tripType').cast(IntegerType())
+				                                                       ).otherwise('tripType')
+				                                     ).orderBy(ts_name)
+				if detect_trip_mode:
+					merged_data = merged_data.withColumn('tripNumber', F.when(F.col('tripNumber').isNotNull(),
+					                                                          F.col('tripNumber').cast(IntegerType())
+					                                                         ).otherwise('tripNumber')
+					                                     ).orderBy(ts_name)
+					merged_data = merged_data.withColumn('tripMOT', F.when(F.col('tripMOT').isNotNull(),
+					                                                       F.col('tripMOT').cast(IntegerType())
+					                                                      ).otherwise('tripMOT')
+					                                     ).orderBy(ts_name)
+
+			merged_data = merged_data.cache()
 			merged_data = merged_data.checkpoint()
 			merged_data.count()
 
 			# Save combined dataframe
-			merged_data.toPandas().to_csv('HABITUS_output/' + output_filename + "{}.csv".format(str(id)), index=False)
-			print(pc.WARNING + " ===> merged dataframe saved in: " + output_filename + "{}.csv".format(str(id)) + pc.ENDC)
-			print("\n")
-		else:
+			merged_data.toPandas().to_csv('HABITUS_output/' + output_filename + "_acc_gps_{}.csv".format(str(id)), index=False)
+			print(pc.WARNING + " ===> merged dataframe saved in: " + output_filename + "_acc_gps_{}.csv".format(str(id)) + pc.ENDC)
+			print(" ")
+
+		if not (merge_data_to_acc and merge_data_to_gps):
 			# Save processed GPS data
-			gps_data.toPandas().to_csv('HABITUS_output/' + file_gps + '-gps.csv', index=False)
-			print(pc.WARNING + " ===> GPS data saved in: {}-gps.csv".format(file_gps) + pc.ENDC)
+			gps_data.toPandas().to_csv('HABITUS_output/' + file_gps + '_gps.csv', index=False)
+			print(pc.WARNING + " ===> GPS data saved in: {}_gps.csv".format(file_gps) + pc.ENDC)
 
 			# Save processed accelerometer data
-			acc_data.toPandas().to_csv('HABITUS_output/' + file_acc + '-acc.csv', index=False)
-			print(pc.WARNING + " ===> accelerometer data saved in: {}-acc.csv".format(file_acc) + pc.ENDC)
-			print("\n")
+			acc_data.toPandas().to_csv('HABITUS_output/' + file_acc + '_acc.csv', index=False)
+			print(pc.WARNING + " ===> accelerometer data saved in: {}_acc.csv".format(file_acc) + pc.ENDC)
+			print(" ")
+
+		print(" ")
 
 		# Remove all checkpoints
 		try:
@@ -503,12 +534,12 @@ def main(gps_path, acc_path, config_file,
 		id += 1
 
 	# Merge output files in one single file
-	if merge_data_to_gps:
-		list_procs = sorted(glob.glob("HABITUS_output/*.csv"))
+	if (merge_data_to_gps):
+		list_procs = sorted(glob.glob("HABITUS_output/*gps_acc*.csv"))
 
 		header_saved = False
 		if len(list_procs) > 1:
-			with open('HABITUS_output/HABITUS_output_all.csv', 'w') as fout:
+			with open('HABITUS_output/' + output_filename + '_gps_acc_all.csv', 'w') as fout:
 				for filename in list_procs:
 					with open(filename) as fin:
 						head = next(fin)
@@ -518,8 +549,20 @@ def main(gps_path, acc_path, config_file,
 						for line in fin:
 							fout.write(line)
 
-	# Copy JSON config file into output folder
-	shutil.copy(config_file, 'HABITUS_output/')
+	if (merge_data_to_acc):
+		list_procs = sorted(glob.glob("HABITUS_output/*acc_gps*.csv"))
+
+		header_saved = False
+		if len(list_procs) > 1:
+			with open('HABITUS_output/' + output_filename + '_acc_gps_all.csv', 'w') as fout:
+				for filename in list_procs:
+					with open(filename) as fin:
+						head = next(fin)
+						if not header_saved:
+							fout.write(head)
+							header_saved = True
+						for line in fin:
+							fout.write(line)
 
 	program_duration = time.time() - program_start
 	print(pc.OKGREEN + "Program completed in: {}".format(

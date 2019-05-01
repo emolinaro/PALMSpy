@@ -34,7 +34,7 @@ import numpy as np
 
 ##########################################################################################################
 
-def gen_gps_dataframe(df, datetime_format, id):
+def gen_gps_dataframe(df, datetime_format):
     """
         GENERATE GPS DATAFRAME
         
@@ -156,12 +156,8 @@ def gen_gps_dataframe(df, datetime_format, id):
     gps_data = gps_data.withColumn('dow',
                                    F.date_format('timestamp','u')
                                    )
-    
-    drop_list = ['date', 'time']
-    
-    gps_data = gps_data.withColumn('ID', F.lit(id)).orderBy('timestamp')
-    
-    gps_data = gps_data.select('ID','timestamp', 'dow', 'lat', 'lon', 
+
+    gps_data = gps_data.select('timestamp', 'dow', 'lat', 'lon',
                                'distance', 'height', 'speed').orderBy('timestamp')
     
     return gps_data
@@ -350,14 +346,8 @@ def fill_timestamp(df, ts_name, fix_type_name, interval, ws):
                                          .otherwise(F.col(fix_type_name))
                         )
                 
-    ref = ref.drop('total_sec').dropna()
-    
-    cols = ref.columns
-    cols.remove('ID')
-    cols.insert(0,'ID')
+    ref = ref.drop('total_sec').dropna().orderBy(ts_name)
 
-    ref = ref.select(cols).orderBy(ts_name)
-    
     return ref
 
 ##########################################################################################################
@@ -1345,7 +1335,7 @@ def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per
     
     minp = df.select(F.min(ts_name).cast('long')).first()[0]
     
-    df2 = df.select('ID', ts_name, 'dow', 'lat', 'lon', dist_name, speed_name, fix_type_name)
+    df2 = df.select(ts_name, 'dow', 'lat', 'lon', dist_name, speed_name, fix_type_name)
     
     df2 = df2.withColumn('total_sec', F.col(ts_name).cast('long'))
     
@@ -2262,7 +2252,7 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                               0).otherwise(F.col('tripNumber'))
                          ).orderBy(ts_name)
 
-    df2 = df2.select('ID',ts_name,'dow','lat','lon','fixTypeCode','tripNumber','tripType','tripMOT')
+    df2 = df2.select(ts_name,'dow','lat','lon','fixTypeCode','tripNumber','tripType','tripMOT')
    
     return df2
 
