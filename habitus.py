@@ -515,12 +515,12 @@ def main(gps_path, acc_path, config_file,
 
 		if not merge_data_to_acc and not merge_data_to_gps:
 			# Save processed GPS data
-			gps_data.toPandas().to_csv('HABITUS_output/' + file_gps[:-4] + '_habitus.csv', index=False)
-			print(pc.WARNING + " ===> GPS data saved in: {}_gps.csv".format(file_gps[:-4]) + pc.ENDC)
+			gps_data.toPandas().to_csv('HABITUS_output/' + file_gps[:-4] + '_habitus_gps.csv', index=False)
+			print(pc.WARNING + " ===> GPS data saved in: {}_habitus_gps.csv".format(file_gps[:-4]) + pc.ENDC)
 
 			# Save processed accelerometer data
-			acc_data.toPandas().to_csv('HABITUS_output/' + file_acc[:-4] + '_habitus.csv', index=False)
-			print(pc.WARNING + " ===> accelerometer data saved in: {}_acc.csv".format(file_acc[:-4]) + pc.ENDC)
+			acc_data.toPandas().to_csv('HABITUS_output/' + file_acc[:-4] + '_habitus_acc.csv', index=False)
+			print(pc.WARNING + " ===> accelerometer data saved in: {}_habitus_acc.csv".format(file_acc[:-4]) + pc.ENDC)
 			print(" ")
 
 		print(" ")
