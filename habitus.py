@@ -513,14 +513,14 @@ def main(gps_path, acc_path, config_file,
 			print(pc.WARNING + " ===> merged dataframe saved in: " + output_filename + "_acc_gps_{}.csv".format(str(id)) + pc.ENDC)
 			print(" ")
 
-		if not (merge_data_to_acc and merge_data_to_gps):
+		if not merge_data_to_acc and not merge_data_to_gps:
 			# Save processed GPS data
-			gps_data.toPandas().to_csv('HABITUS_output/' + file_gps + '_gps.csv', index=False)
-			print(pc.WARNING + " ===> GPS data saved in: {}_gps.csv".format(file_gps) + pc.ENDC)
+			gps_data.toPandas().to_csv('HABITUS_output/' + file_gps[:-4] + '_gps.csv', index=False)
+			print(pc.WARNING + " ===> GPS data saved in: {}_gps.csv".format(file_gps[:-4]) + pc.ENDC)
 
 			# Save processed accelerometer data
-			acc_data.toPandas().to_csv('HABITUS_output/' + file_acc + '_acc.csv', index=False)
-			print(pc.WARNING + " ===> accelerometer data saved in: {}_acc.csv".format(file_acc) + pc.ENDC)
+			acc_data.toPandas().to_csv('HABITUS_output/' + file_acc[:-4] + '_acc.csv', index=False)
+			print(pc.WARNING + " ===> accelerometer data saved in: {}_acc.csv".format(file_acc[:-4]) + pc.ENDC)
 			print(" ")
 
 		print(" ")
