@@ -9,7 +9,7 @@
 			"memory": "16g"
 		},
 		"memory":{
-			"fraction": "0.8",
+			"fraction": "0.6",
 			"offHeap":{
 				"enabled": true,
 				"size": "16g"
@@ -111,6 +111,7 @@
 
 	"merge_options":
 	{
-		"merge_data_to_gps": true
+		"merge_data_to_gps": true,
+		"merge_data_to_acc": false
 	}
 }

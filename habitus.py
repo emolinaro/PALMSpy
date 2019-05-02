@@ -250,7 +250,7 @@ def main(gps_path, acc_path, config_file,
 		print(" ")
 
 		# Process accelerometer data
-		print(pc.OKBLUE + pc.UNDERLINE + "process accelerometer data\n" + pc.ENDC)
+		print(pc.OKBLUE + pc.UNDERLINE + "processing accelerometer data\n" + pc.ENDC)
 
 		# Read raw accelerometer data
 		acc_data_raw = spark.read.text(acc_path + file_acc)
@@ -319,7 +319,7 @@ def main(gps_path, acc_path, config_file,
 		print(" ")
 
 		# Process GPS data
-		print(pc.OKBLUE + pc.UNDERLINE + "process GPS data\n" + pc.ENDC)
+		print(pc.OKBLUE + pc.UNDERLINE + "processing GPS data\n" + pc.ENDC)
 
 		# Read raw GPS data
 		gps_data_raw = spark.read.csv(gps_path + file_gps, header=True, inferSchema=True).cache()
@@ -410,7 +410,7 @@ def main(gps_path, acc_path, config_file,
 			time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
 		print(" ")
 
-		#gps_data = gps_data.limit(100) ######################################<<<<<<<<<<<<<<<
+		#gps_data = gps_data.limit(1000) ######################################<<<<<<<<<<<<<<<
 
 		# Trip detection
 		if trip_detection:
@@ -468,7 +468,7 @@ def main(gps_path, acc_path, config_file,
 
 		# Merge dataframes
 		if merge_data_to_gps:
-			print(pc.OKBLUE + pc.UNDERLINE + "merge accelerometer data to GPS data\n" + pc.ENDC)
+			print(pc.OKBLUE + pc.UNDERLINE + "merging accelerometer data to GPS data\n" + pc.ENDC)
 
 			merged_data = gps_data.join(acc_data, ['ID', ts_name], how='left').orderBy(ts_name)
 
@@ -482,7 +482,7 @@ def main(gps_path, acc_path, config_file,
 			print(" ")
 
 		if merge_data_to_acc:
-			print(pc.OKBLUE + pc.UNDERLINE + "merge GPS data to accelerometer data\n" + pc.ENDC)
+			print(pc.OKBLUE + pc.UNDERLINE + "merging GPS data to accelerometer data\n" + pc.ENDC)
 			merged_data = acc_data.join(gps_data, ['ID', ts_name], how='left').orderBy(ts_name)
 
 			merged_data = merged_data.withColumn(fix_type_col, F.when(F.col(fix_type_col).isNotNull(),

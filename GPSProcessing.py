@@ -447,7 +447,7 @@ def filter_change_dist_3_fixes(df, dcol, tscol, dmin):
     lat2 = F.lag(F.col('lat'),1,first_lat).over(w)
     lon2 = F.lag(F.col('lon'),1,first_lon).over(w)
     
-    # Recaulculate the traveled from last fix
+    # Recalculate the traveled from last fix
     df2 = df.withColumn(dcol, F.when((F.col('lat') != first_lat) & (F.col('lat') != last_lat),
                                             app_fun(lat0,lon0,lat2,lon2)
                                           )
@@ -1335,7 +1335,11 @@ def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per
     
     minp = df.select(F.min(ts_name).cast('long')).first()[0]
     
-    df2 = df.select(ts_name, 'dow', 'lat', 'lon', dist_name, speed_name, fix_type_name)
+    df1 = df.select(ts_name, 'dow', 'lat', 'lon', dist_name, speed_name, fix_type_name).cache()
+    df1 = df1.checkpoint()
+    df1.count()
+
+    df2 = df.select(ts_name, 'lat', 'lon', fix_type_name)
     
     df2 = df2.withColumn('total_sec', F.col(ts_name).cast('long'))
     
@@ -1839,8 +1843,10 @@ def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per
     #'duration'
     df2 = df2.drop(*['state_cp','tripType_cp','total_sec','cum_dist_min',
                     'pause', 'pause_dist','i1','i2','i3','state','segment'])
-    
-    return df2
+
+    df1 = df1.join(df2, [ts_name, 'lat', 'lon', fix_type_name], how='left').orderBy(ts_name)
+
+    return df1
 
 ##########################################################################################################
 

@@ -6,7 +6,7 @@ import argparse
 
 
 def main(interval=30, insert_missing=True, insert_until=False,
-         insert_max_seconds=600, loss_max_duration=60, filter_invalid_values=True,
+         insert_max_seconds=600, loss_max_duration=600, filter_invalid_values=True,
          max_speed = 130, max_ele_change=1000, min_change_3_fixes=10,
          detect_trip=True, min_distance=34, min_trip_length=100, min_trip_duration=180,
 		 min_pause_duration=180, max_pause_duration=300, detect_trip_mode=True,
@@ -19,7 +19,7 @@ def main(interval=30, insert_missing=True, insert_until=False,
 		 detect_sedentary_bouts=True, sedentary_bout_duration=30,
 		 sedentary_bout_upper_limit=100, sedentary_bout_tolerance=1,
 		 very_hard_cutoff=9498, hard_cutoff=5725, moderate_cutoff=1953, light_cutoff=100,
-		 merge_data_to_gps=True,
+		 merge_data_to_gps=False, merge_data_to_acc=False,
          driver_mem='16g', executor_mem='16g', mem_fraction=0.6, shuffle_partitions=20, mem_offHeap_enabled=True,
          mem_offHeap_size='16g', clean_checkpoints=True, codegen_wholeStage=False, codegen_fallback=True,
          broadcast_timeout=1200, network_timeout='800s',
@@ -74,6 +74,7 @@ def main(interval=30, insert_missing=True, insert_until=False,
 
 	# Merge options
 	settings['merge_options']['merge_data_to_gps'] = merge_data_to_gps
+	settings['merge_options']['merge_data_to_acc'] = merge_data_to_acc
 
 	# Spark parameters
 	settings['spark']['memory']['fraction'] = mem_fraction
@@ -417,8 +418,17 @@ parser.add_argument(
 	"--merge-acc-to-gps",
 	type=bool,
 	dest="merge_data_to_gps",
-	default = True,
+	default = False,
 	help="if true, the accelerometer data will be merged to the GPS data and exported in one single file.\
+	      If, false, the processed accelerometer and GPS data will be saved in two different files"
+)
+
+parser.add_argument(
+	"--merge-acc-to-acc",
+	type=bool,
+	dest="merge_data_to_acc",
+	default = False,
+	help="if true, the GPS data will be merged to the accelerometer data and exported in one single file.\
 	      If, false, the processed accelerometer and GPS data will be saved in two different files"
 )
 
