@@ -1649,120 +1649,25 @@ def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per
     df2 = df2.withColumn('state_cp', F.col('state'))
     df2 = df2.withColumn('tripType_cp', F.col('tripType'))
     
-    # 14. Process CASE 1
-    stop = F.col('i1').isNotNull() & (F.col('pause_dist') == 0.0) & (F.col('pause') == F.col('duration'))
-    
+    # 14. Process CASE 1, 2, 3
+    stop = (F.col('pause_dist') == 0.0) & (F.col('pause') == F.col('duration'))
+
+    #
+
     df2 = proc_segment(df2, 'i1', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 3, 2, "CASE1")
-    
-    df2 = df2.withColumn('state_cp', F.when(F.col('i1').isNotNull(),
-                                            F.col('state')
-                                           ).otherwise(F.col('state_cp'))
-                        )
-    
-    df2 = df2.withColumn('tripType_cp', F.when(F.col('i1').isNotNull(),
-                                               F.col('tripType')
-                                              ).otherwise(F.col('tripType_cp'))
-                        )
-
-    df2 = df2.cache()
-    df2 = df2.checkpoint()
-    df2.count()
-
-    ct = df2.select('i1','duration','pause','pause_dist').filter(stop).count()
-    
-    ct_ = 0
-    
-    #print('i1:')
-    #k=1
-    while (ct - ct_ != 0):
-        
-        ct_ = ct
-
-        df2 = df2.cache()
-        df2 = df2.checkpoint()
-        df2.count()
-    
-        df2 = set_pause(df2, 'i1', ts_name)
-    
-        df2 = check_case(df2, 'i1', ts_name, min_dist_per_min, min_pause_duration, max_pause_time)
-    
-        df2 = proc_segment(df2, 'j1', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 3, 2, "CASE1")
-        df2 = proc_segment(df2, 'j2', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 3, 3, "CASE2")
-        df2 = proc_segment(df2, 'j3', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 0, 0, "CASE3")
-        df2 = proc_segment(df2, 'j4', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 0, 0, "CASE4")
-        df2 = df2.drop(*['j1','j2','j3','j4'])
-        
-        #df2.cache()
-    
-        ct = df2.select('i1','duration','pause','pause_dist').filter(stop).count() 
-        
-        #print((k, ct, ct_))
-        #k=k+1
-    
-        #df3.persist()
-    
-    # 15. Process CASE 2
-    stop = F.col('i2').isNotNull() & (F.col('pause_dist') == 0.0) & (F.col('pause') == F.col('duration'))
-    
     df2 = proc_segment(df2, 'i2', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 3, 3, "CASE2")
-    
-    df2 = df2.withColumn('state_cp', F.when(F.col('i2').isNotNull(),
-                                            F.col('state')
-                                           ).otherwise(F.col('state_cp'))
-                        )
-    
-    df2 = df2.withColumn('tripType_cp', F.when(F.col('i2').isNotNull(),
-                                               F.col('tripType')
-                                              ).otherwise(F.col('tripType_cp'))
-                        )
-
-    df2 = df2.cache()
-    df2 = df2.checkpoint()
-    
-    ct = df2.select('i2','duration','pause','pause_dist').filter(stop).count()
-    
-    ct_ = 0
-    
-    #print('i2:')
-    #k=1
-    while (ct - ct_ != 0):
-        
-        ct_ = ct
-
-        df2 = df2.cache()
-        df2 = df2.checkpoint()
-        df2.count()
-    
-        df2 = set_pause(df2, 'i2', ts_name)
-    
-        df2 = check_case(df2, 'i2', ts_name, min_dist_per_min, min_pause_duration, max_pause_time)
-    
-        df2 = proc_segment(df2, 'j1', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 3, 2, "CASE1")
-        df2 = proc_segment(df2, 'j2', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 3, 3, "CASE2")
-        df2 = proc_segment(df2, 'j3', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 0, 0, "CASE3")
-        df2 = proc_segment(df2, 'j4', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 0, 0, "CASE4")
-        df2 = df2.drop(*['j1','j2','j3','j4'])
-        
-        #df2.cache()
-    
-        ct = df2.select('i2','duration','pause','pause_dist').filter(stop).count() 
-        
-        #print((k, ct, ct_))
-        #k=k+1
-    
-        #df3.persist()
-    
-    # 16. Process CASE 3
-    stop = F.col('i3').isNotNull() & (F.col('pause_dist') == 0.0) & (F.col('pause') == F.col('duration'))
-    
     df2 = proc_segment(df2, 'i3', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 0, 0, "CASE3")
     
-    df2 = df2.withColumn('state_cp', F.when(F.col('i3').isNotNull(),
+    df2 = df2.withColumn('state_cp', F.when(F.col('i1').isNotNull() &
+                                            F.col('i2').isNotNull() &
+                                            F.col('i3').isNotNull(),
                                             F.col('state')
                                            ).otherwise(F.col('state_cp'))
                         )
     
-    df2 = df2.withColumn('tripType_cp', F.when(F.col('i3').isNotNull(),
+    df2 = df2.withColumn('tripType_cp', F.when(F.col('i1').isNotNull() &
+                                               F.col('i2').isNotNull() &
+                                               F.col('i3').isNotNull(),
                                                F.col('tripType')
                                               ).otherwise(F.col('tripType_cp'))
                         )
@@ -1770,41 +1675,34 @@ def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per
     df2 = df2.cache()
     df2 = df2.checkpoint()
     df2.count()
-    
-    ct = df2.select('i3','duration','pause','pause_dist').filter(stop).count()
-    
+
+    ct = df2.filter(stop).count()
+
     ct_ = 0
-    
-    #print('i3:')
-    #k=1
+
     while (ct - ct_ != 0):
         
         ct_ = ct
 
-        df2 = df2.cache()
-        df2 = df2.checkpoint()
-        df2.count()
-    
-        df2 = set_pause(df2, 'i3', ts_name)
-    
-        df2 = check_case(df2, 'i3', ts_name, min_dist_per_min, min_pause_duration, max_pause_time)
-    
-        df2 = proc_segment(df2, 'j1', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 3, 2, "CASE1")
-        df2 = proc_segment(df2, 'j2', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 3, 3, "CASE2")
-        df2 = proc_segment(df2, 'j3', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 0, 0, "CASE3")
-        df2 = proc_segment(df2, 'j4', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 0, 0, "CASE4")
-        df2 = df2.drop(*['j1','j2','j3','j4'])
-        
-        #df2.cache()
-    
-        ct = df2.select('i3','duration','pause','pause_dist').filter(stop).count() 
-        
-        #print((k, ct, ct_))
-        #k=k+1
-    
-        #df3.persist()
+        for index in ['i1','i2','i3']:
 
-    # 17. Sanity checks
+            df2 = df2.cache()
+            df2 = df2.checkpoint()
+            df2.count()
+
+            df2 = set_pause(df2, index, ts_name).cache()
+    
+            df2 = check_case(df2, index, ts_name, min_dist_per_min, min_pause_duration, max_pause_time).cache()
+    
+            df2 = proc_segment(df2, 'j1', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 3, 2, "CASE1").cache()
+            df2 = proc_segment(df2, 'j2', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 3, 3, "CASE2").cache()
+            df2 = proc_segment(df2, 'j3', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 0, 0, "CASE3").cache()
+            df2 = proc_segment(df2, 'j4', ts_name, min_dist_per_min, min_pause_duration, max_pause_time, 0, 0, "CASE4").cache()
+            df2 = df2.drop(*['j1','j2','j3','j4'])
+
+        ct = df2.filter(stop).count()
+
+    # 15. Sanity checks
     ## Redefine last fix as ENDPOINT and state as STATIONARY
     df2 = df2.withColumn('state', F.when(F.col('fixTypeCode') == 3, 0).otherwise(F.col('state')))
     df2 = df2.withColumn('tripType', F.when(F.col('fixTypeCode') == 3, 4).otherwise(F.col('tripType')))
