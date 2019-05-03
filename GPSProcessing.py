@@ -1687,7 +1687,7 @@ def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per
         for index in ['i1','i2','i3']:
 
             df2 = df2.cache()
-            df2 = df2.checkpoint()
+            df2 = df2.localCheckpoint()
             df2.count()
 
             df2 = set_pause(df2, index, ts_name).cache()
