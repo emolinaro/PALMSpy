@@ -254,7 +254,6 @@ def main(gps_path, acc_path, config_file,
 
 		# Read raw accelerometer data
 		acc_data_raw = spark.read.text(acc_path + file_acc)
-		acc_data_raw.checkpoint()
 
 		step, acc_data = gen_acc_dataframe(acc_data_raw)
 
@@ -263,14 +262,12 @@ def main(gps_path, acc_path, config_file,
 
 		acc_data = split_acc_data(acc_data, acc_columns)
 		acc_data = select_acc_intervals(acc_data, ts_name, step, interval, include_vect, include_acc).cache()
-		acc_data = acc_data.checkpoint()
 		acc_data.count()
 
 		print(pc.WARNING + " ===> determine activity count..." + pc.ENDC)
 		start_time = time.time()
 		acc_data = activity_count(acc_data, ts_name, interval,
 								  light_cutoff, moderate_cutoff, hard_cutoff, very_hard_cutoff, include_acc).cache()
-		acc_data = acc_data.checkpoint()
 		acc_data.count()
 		elapsed_time = time.time() - start_time
 		print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
@@ -280,7 +277,6 @@ def main(gps_path, acc_path, config_file,
 			print(pc.WARNING + " ===> determine non-wearing period..." + pc.ENDC)
 			start_time = time.time()
 			acc_data = non_wear_filter(acc_data, ts_name, AC_name, AI_name, interval, minutes_zeros_row).cache()
-			acc_data = acc_data.checkpoint()
 			acc_data.count()
 			elapsed_time = time.time() - start_time
 			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
@@ -291,7 +287,6 @@ def main(gps_path, acc_path, config_file,
 			acc_data = activity_bout_filter(acc_data, ts_name, AC_name, 'activityBoutNumber', interval,
 											activity_bout_upper_limit, activity_bout_lower_limit,
 											activity_bout_duration, activity_bout_tolerance).cache()
-			acc_data = acc_data.checkpoint()
 			acc_data.count()
 			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
 			print(" ")
@@ -301,7 +296,6 @@ def main(gps_path, acc_path, config_file,
 			acc_data = sedentary_bout_filter(acc_data, ts_name, AC_name, 'sedentaryBoutNumber', interval,
 											sedentary_bout_upper_limit, 0,
 											sedentary_bout_duration, sedentary_bout_tolerance).cache()
-			acc_data = acc_data.checkpoint()
 			acc_data.count()
 			print(pc.WARNING + "      time elapsed: {}".format(
 				time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
@@ -323,7 +317,6 @@ def main(gps_path, acc_path, config_file,
 
 		# Read raw GPS data
 		gps_data_raw = spark.read.csv(gps_path + file_gps, header=True, inferSchema=True).cache()
-		gps_data_raw = gps_data_raw.checkpoint()
 		gps_data_raw.count()
 
 		date_format = 'yyyy/MM/dd'
@@ -331,13 +324,11 @@ def main(gps_path, acc_path, config_file,
 		datetime_format = date_format + ' ' + time_format
 
 		gps_data = gen_gps_dataframe(gps_data_raw, datetime_format).cache()
-		gps_data = gps_data.checkpoint()
 		gps_data.count()
 
 		print(pc.WARNING + " ===> set fix type..." + pc.ENDC)
 		start_time = time.time()
 		gps_data = set_fix_type(gps_data, ts_name, los_max_duration).cache()
-		gps_data = gps_data.checkpoint()
 		gps_data.count()
 		elapsed_time = time.time() - start_time
 		print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
@@ -349,7 +340,6 @@ def main(gps_path, acc_path, config_file,
 			print(pc.WARNING + " ===> apply velocity filter..." + pc.ENDC)
 			start_time = time.time()
 			gps_data = filter_speed(gps_data, speed_col, max_speed).cache()
-			gps_data = gps_data.checkpoint()
 			gps_data.count()
 			elapsed_time = time.time() - start_time
 			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
@@ -358,7 +348,6 @@ def main(gps_path, acc_path, config_file,
 			print(pc.WARNING + " ===> apply acceleration filter..." + pc.ENDC)
 			start_time = time.time()
 			gps_data = filter_acceleration(gps_data, speed_col, ts_name).cache()
-			gps_data = gps_data.checkpoint()
 			gps_data.count()
 			elapsed_time = time.time() - start_time
 			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
@@ -367,7 +356,6 @@ def main(gps_path, acc_path, config_file,
 			print(pc.WARNING + " ===> apply elevation change filter..." + pc.ENDC)
 			start_time = time.time()
 			gps_data = filter_height(gps_data, ele_col, ts_name, max_ele_change).cache()
-			gps_data = gps_data.checkpoint()
 			gps_data.count()
 			elapsed_time = time.time() - start_time
 			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
@@ -376,7 +364,6 @@ def main(gps_path, acc_path, config_file,
 			print(pc.WARNING + " ===> apply three fixes filter..." + pc.ENDC)
 			start_time = time.time()
 			gps_data = filter_change_dist_3_fixes(gps_data, dist_col, ts_name, min_change_3_fixes).cache()
-			gps_data = gps_data.checkpoint()
 			gps_data.count()
 			elapsed_time = time.time() - start_time
 			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
@@ -394,7 +381,6 @@ def main(gps_path, acc_path, config_file,
 		else:
 			start_time = time.time()
 			gps_data = select_gps_intervals(gps_data, ts_name, interval).cache()
-			gps_data = gps_data.checkpoint()
 			gps_data.count()
 			elapsed_time = time.time() - start_time
 			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
