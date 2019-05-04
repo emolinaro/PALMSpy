@@ -1309,7 +1309,7 @@ def check_case(df, index, ts_name, min_dist_per_min, min_pause_duration, max_pau
 ##########################################################################################################
 
 def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per_min, 
-                 min_pause_duration, max_pause_time, vmax):
+                 min_pause_duration, max_pause_time, vmax, num_partitions):
     """
             
         
@@ -1679,6 +1679,8 @@ def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per
     ct = df2.filter(stop).count()
 
     ct_ = 0
+
+    df2 = df2.coalesce(num_partitions)
 
     while (ct - ct_ != 0):
         
