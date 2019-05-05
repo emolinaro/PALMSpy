@@ -2,7 +2,7 @@ FROM openjdk:8-jre-slim
 
 ARG BUILD_DATE
 ARG SPARK_VERSION=2.4.2
-ARG HABITUS_VERSION=1.2
+ARG HABITUS_VERSION=1.3
 
 MAINTAINER Emiliano Molinaro <emil.molinaro@gmail.com>
 

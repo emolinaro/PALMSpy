@@ -6,7 +6,7 @@ SOFTWARE=habitus
 
 rm -f Dockefile
 cp Dockerfile.template Dockerfile
-sed -i -e "s/<VER>/$VERSION/g" Dockerfile
+sed -i "s/<VER>/$VERSION/g" Dockerfile
 
 
 /usr/local/bin/docker build -t $SOFTWARE:$VERSION  --force-rm .
