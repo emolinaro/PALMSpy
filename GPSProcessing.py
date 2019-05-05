@@ -1309,7 +1309,7 @@ def check_case(df, index, ts_name, min_dist_per_min, min_pause_duration, max_pau
 ##########################################################################################################
 
 def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per_min, 
-                 min_pause_duration, max_pause_time, vmax, num_partitions):
+                 min_pause_duration, max_pause_time, vmax):
     """
             
         

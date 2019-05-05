@@ -401,13 +401,11 @@ def main(gps_path, acc_path, config_file,
 		# Trip detection
 		if trip_detection:
 
-			num_partitions = 3*int(sc.defaultParallelism)
-
 			print(pc.WARNING + " ===> detect trips..." + pc.ENDC)
 			start_time = time.time()
 			## set 4 partitions (use this value only in local mode)
 			gps_data = detect_trips(gps_data, ts_name, dist_col, speed_col, fix_type_col, min_distance,
-									min_pause_duration, max_pause_duration, max_speed, num_partitions).cache()
+									min_pause_duration, max_pause_duration, max_speed).cache()
 			gps_data = gps_data.checkpoint()
 			gps_data.count()
 			elapsed_time = time.time() - start_time
