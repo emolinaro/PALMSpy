@@ -1682,11 +1682,11 @@ def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per
 
     df2 = df2.coalesce(num_partitions)
 
-    while (ct - ct_ != 0):
-        
-        ct_ = ct
+    for index in ['i1', 'i2', 'i3']:
 
-        for index in ['i1','i2','i3']:
+        while (ct - ct_ != 0):
+        
+            ct_ = ct
 
             df2 = set_pause(df2, index, ts_name).cache()
     
@@ -1701,7 +1701,7 @@ def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per
             df2 = df2.checkpoint()
             df2.count()
 
-        ct = df2.filter(stop).count()
+            ct = df2.filter(stop).count()
 
     # 15. Sanity checks
     ## Redefine last fix as ENDPOINT and state as STATIONARY
