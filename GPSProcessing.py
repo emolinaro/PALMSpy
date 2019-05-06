@@ -2047,16 +2047,17 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                          ).orderBy(ts_name)
 
     # set trip start according to speed (recalculate the speed)
-    df2 = df2.withColumn(speed_name, F.when((F.col(dist_name) != 0.0),
-                                            3.6 * F.col(dist_name) / F.col('duration')
-                                            ).otherwise(0.0)
-                         ).orderBy(ts_name)
+    # df2 = df2.withColumn(speed_name, F.when((F.col(dist_name) != 0.0),
+    #                                         3.6 * F.col(dist_name) / F.col('duration')
+    #                                         ).otherwise(0.0)
+    #                      ).orderBy(ts_name)
+
 
     df2 = df2.withColumn('roundSpeed', F.when(F.col('trip').isNotNull() &
                                               F.col(speed_name).isNotNull(),
                                               udf_round(F.col(speed_name)).cast(IntegerType())))
 
-    """
+
     df2 = df2.withColumn('trip', F.when((F.col('trip') == 2) &
                                          (F.lag('roundSpeed',1).over(Window.orderBy(ts_name)) == 0),
                                          4).otherwise(F.col('trip'))
@@ -2068,7 +2069,7 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                         4).otherwise(F.col('trip'))
                          ).orderBy(ts_name)
     #######
-
+    """
     df2 = df2.withColumn('trip', F.when((F.col('trip') == 4) &
                                         (F.lag('trip', 1).over(Window.orderBy(ts_name)) == 4),
                                         F.col('tripType')
