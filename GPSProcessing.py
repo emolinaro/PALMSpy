@@ -1876,378 +1876,465 @@ def trip_mode_type(roundSpeed, vehicle_speed_cutoff, bicycle_speed_cutoff, walk_
     except:
         value = None
     
-        
-        
     return value
 
 ##########################################################################################################
 
 def trip_segmentation(df, ts_name, speed_segment_length):
-    
     """
-    
+
     """
-    
+
     w1 = Window.orderBy(ts_name).rowsBetween(Window.unboundedPreceding, 0)
     w2 = Window.partitionBy('segment').orderBy(ts_name)
-    
-    app_fun = F.udf(lambda a,b,c,d: calc_distance(a,b,c,d))
-    
+
+    app_fun = F.udf(lambda a, b, c, d: calc_distance(a, b, c, d))
+
     # trip segmentation
-    
+
     df2 = df.withColumn('segment', F.when(F.col('trip') == 1, F.monotonically_increasing_id()))
     df2 = df2.withColumn('segment', F.when(F.col('segment').isNull() &
                                            F.col('trip').isNotNull(),
                                            F.last('segment', ignorenulls=True).over(w1)
                                            ).otherwise(F.col('segment'))
-                        ).orderBy(ts_name)
-    
+                         ).orderBy(ts_name)
+
     # compute duration and traveled distance for each segment
-    
+
     df2 = df2.withColumn('pause', F.when(F.col('trip') == 1,
                                          F.col('duration')
-                                        )
-                        )
-    
+                                         )
+                         )
+
     df2 = df2.withColumn('pause_dist', F.when(F.col('trip') == 1,
                                               0.0
-                                             )
-                        )
-    
+                                              )
+                         )
+
     df2 = df2.withColumn('pause', F.when(F.col('pause') == F.col('duration'),
                                          F.col('cum_pause') - F.col('duration')
-                                        ).otherwise(F.col('pause'))
-                        ).orderBy(ts_name)
-        
+                                         ).otherwise(F.col('pause'))
+                         ).orderBy(ts_name)
+
     df2 = df2.withColumn('pause', F.when(F.col('segment').isNotNull() &
-                                         F.col('pause').isNull(), 
+                                         F.col('pause').isNull(),
                                          F.last('pause', ignorenulls=True).over(w1)
-                                        ).otherwise(F.col('pause'))
-                        ).orderBy(ts_name)
-        
+                                         ).otherwise(F.col('pause'))
+                         ).orderBy(ts_name)
+
     df2 = df2.withColumn('pause', F.when(F.col('segment').isNotNull(),
                                          F.col('cum_pause') - F.col('pause')
-                                        ).otherwise(F.col('pause'))
-                        )
-    
-         
+                                         ).otherwise(F.col('pause'))
+                         )
+
     df2 = df2.withColumn('lat2', F.when(F.col('pause_dist').isNotNull(), F.col('lat')))
     df2 = df2.withColumn('lat2', F.when(F.col('pause_dist').isNull(),
                                         F.last('lat2', ignorenulls=True).over(w2)
-                                       )
-                                  .otherwise(F.col('lat'))
-                        ).orderBy(ts_name)
+                                        )
+                         .otherwise(F.col('lat'))
+                         ).orderBy(ts_name)
     df2 = df2.withColumn('lat2', F.when(F.col('lat2').isNull(), F.col('lat')).otherwise(F.col('lat2')))
-                        
+
     df2 = df2.withColumn('lon2', F.when(F.col('pause_dist').isNotNull(), F.col('lon')))
-    df2 = df2.withColumn('lon2', F.when(F.col('pause_dist').isNull(), 
+    df2 = df2.withColumn('lon2', F.when(F.col('pause_dist').isNull(),
                                         F.last('lon2', ignorenulls=True).over(w2)
-                                       ).otherwise(F.col('lon'))
-                            ).orderBy(ts_name)
+                                        ).otherwise(F.col('lon'))
+                         ).orderBy(ts_name)
     df2 = df2.withColumn('lon2', F.when(F.col('lon2').isNull(), F.col('lon')).otherwise(F.col('lon2')))
-        
+
     df2 = df2.withColumn('pause_dist', F.when(F.col('segment').isNotNull() &
                                               F.col('pause_dist').isNull(),
-                                              app_fun(F.col('lat'),F.col('lon'),F.col('lat2'),F.col('lon2'))
-                                             ).otherwise(F.col('pause_dist'))
-                        )
-    df2 = df2.drop(*['lat2','lon2'])
-    
-    # remove short sub-trips 
-    
+                                              app_fun(F.col('lat'), F.col('lon'), F.col('lat2'), F.col('lon2'))
+                                              ).otherwise(F.col('pause_dist'))
+                         )
+    df2 = df2.drop(*['lat2', 'lon2'])
+
+    # remove short sub-trips
+
+    df2 = df2.withColumn('t1', F.when((F.col('trip') == 4) &
+                                      (F.col('pause_dist') <= speed_segment_length) &
+                                      F.lead('trip', 1).over(Window.orderBy(ts_name)).isNotNull(),
+                                      F.col('segment')
+                                      )
+                         )
+
+    df2 = df2.withColumn('t1', F.when(F.col('segment').isNotNull() &
+                                      F.col('t1').isNull(),
+                                      F.first('t1', ignorenulls=True)
+                                      .over(Window.partitionBy('segment')
+                                            .rowsBetween(0, Window.unboundedFollowing)
+                                            )
+                                      ).otherwise(F.col('t1'))
+                         ).orderBy(ts_name)
+
+    df2 = df2.withColumn('t1', F.when(F.col('t1').isNotNull() &
+                                      (F.col('trip') == 4) &
+                                      F.lead('t1', 1).over(Window.orderBy(ts_name)).isNotNull(),
+                                      F.lead('t1', 1).over(Window.orderBy(ts_name))
+                                      ).otherwise(F.col('t1'))
+                         ).orderBy(ts_name)
+
+    df2 = df2.withColumn('t2', F.when((F.col('trip') == 4) &
+                                      (F.col('pause_dist') <= speed_segment_length) &
+                                      F.lead('trip', 1).over(Window.orderBy(ts_name)).isNotNull(),
+                                      F.col('pause_dist')
+                                      ).otherwise(0.0)
+                         )
+    df2 = df2.withColumn('t3', F.when(F.col('t1').isNotNull(),
+                                      F.sum('t2').over(Window.partitionBy('t1').orderBy(ts_name)
+                                                       .rowsBetween(Window.unboundedPreceding, 0)
+                                                       )
+                                      )
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('t2', F.when((F.col('trip') == 4) &
+                                      (F.col('t2') == F.col('t3')),
+                                      F.col('t2') + F.lag('t3', 1).over(Window.orderBy(ts_name))
+                                      ).otherwise(F.col('t2'))
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('t3', F.when(F.col('t1').isNotNull(),
+                                      F.sum('t2').over(Window.partitionBy('t1').orderBy(ts_name)
+                                                       .rowsBetween(Window.unboundedPreceding, 0)
+                                                       )
+                                      )
+                         ).drop(*['t1', 't2']).orderBy(ts_name)
+
     df2 = df2.withColumn('trip', F.when((F.col('trip') == 4) &
-                                        (F.col('pause_dist') <= speed_segment_length) &
-                                        F.lead('trip',1).over(Window.orderBy(ts_name)).isNotNull(),
+                                        (F.col('t3') <= speed_segment_length) &
+                                        F.lead('trip', 1).over(Window.orderBy(ts_name)).isNotNull(),
                                         F.col('tripType')
-                                       ).otherwise(F.col('trip'))
-                        )
-    
+                                        ).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
     df2 = df2.withColumn('trip', F.when((F.col('trip') == 1) &
-                                        (F.lag('pause_dist',1).over(Window.orderBy(ts_name)) <= speed_segment_length),
+                                        (F.lag('t3', 1).over(Window.orderBy(ts_name)) <= speed_segment_length),
                                         F.col('tripType')
-                                       ).otherwise(F.col('trip'))
-                        )
-    
+                                        ).otherwise(F.col('trip'))
+                         ).drop('t3').orderBy(ts_name)
+
     return df2
 
 ##########################################################################################################
 
-def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bicycle_speed_cutoff, 
+def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bicycle_speed_cutoff,
                    walk_speed_cutoff, min_trip_length, min_trip_duration, speed_segment_length, speed_percentile):
-    
     """
-    
-    
+
+
     """
     w = Window.orderBy(ts_name).rowsBetween(0, Window.unboundedFollowing)
     w1 = Window.orderBy(ts_name).rowsBetween(Window.unboundedPreceding, 0)
     w2 = Window.partitionBy('segment').orderBy(ts_name)
     w3 = Window.partitionBy('tripMOT').orderBy(ts_name)
-    
-    udf_round = F.udf(lambda x: floor(x+0.5)) # floor(x+0.5) == Math.round(x) in JavaScript
-    
+
+    udf_round = F.udf(lambda x: floor(x + 0.5))  # floor(x+0.5) == Math.round(x) in JavaScript
+
     app_fun = F.udf(lambda x: trip_mode_type(x, vehicle_speed_cutoff, bicycle_speed_cutoff, walk_speed_cutoff))
-    
-    df2 = df.withColumn('tripMOT', F.lit(0)) 
-    
+
+    df2 = df.withColumn('tripMOT', F.lit(0))
+
     df2 = df2.withColumn('trip', F.when(F.col('tripType') == 1,
-                                         1)
-                        )
-    
+                                        1)
+                         )
+
     df2 = df2.withColumn('trip', F.when(F.col('tripType') == 4,
-                                         4).otherwise(F.col('trip'))
-                        )
-    
+                                        4).otherwise(F.col('trip'))
+                         )
+
     df2 = df2.withColumn('trip', F.when(F.col('trip').isNull() &
                                         (F.col('tripType') == 2),
                                         F.col('tripType')
-                                       ).otherwise(F.col('trip'))
-                        ).orderBy(ts_name)
-    
-    
-    # set trip start according to speed
-    df2 = df2.withColumn('roundSpeed', F.when(F.col('trip').isNotNull(), 
+                                        ).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
+    # set trip start according to speed (recalculate the speed)
+    df2 = df2.withColumn(speed_name, F.when((F.col(dist_name) != 0.0),
+                                            3.6 * F.col(dist_name) / F.col('duration')
+                                            ).otherwise(0.0)
+                         ).orderBy(ts_name)
+
+    df2 = df2.withColumn('roundSpeed', F.when(F.col('trip').isNotNull(),
                                               udf_round(F.col(speed_name)).cast(IntegerType())))
-                                              #udf_round(F.col('speed2')).cast(IntegerType())))
-    
+
+    """
     df2 = df2.withColumn('trip', F.when((F.col('trip') == 2) &
                                          (F.lag('roundSpeed',1).over(Window.orderBy(ts_name)) == 0),
                                          4).otherwise(F.col('trip'))
-                        ).orderBy(ts_name)
-    
-    df2 = df2.withColumn('trip', F.when((F.col('trip') == 4) &
-                                        (F.lag('trip',1).over(Window.orderBy(ts_name)) == 4),
-                                        F.col('tripType')
-                                       ).otherwise(F.col('trip'))
-                        )
-    
-    df2 = df2.withColumn('trip', F.when((F.col('tripType') == 3) &
-                                         (F.lag('tripType',1).over(Window.orderBy(ts_name)) == 2),
-                                        4).otherwise(F.col('trip'))
-                        ).orderBy(ts_name)
-    
+                        ).orderBy(ts_name) ## use this block instead of the following if do not recalculate the speed
+    """
+    #######
     df2 = df2.withColumn('trip', F.when((F.col('trip') == 2) &
-                                         (F.lag('trip',1).over(Window.orderBy(ts_name)) == 4),
-                                         1).otherwise(F.col('trip'))
-                        ).orderBy(ts_name)
-    
+                                        (F.col('roundSpeed') == 0),
+                                        4).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+    #######
+
+    df2 = df2.withColumn('trip', F.when((F.col('trip') == 4) &
+                                        (F.lag('trip', 1).over(Window.orderBy(ts_name)) == 4),
+                                        F.col('tripType')
+                                        ).otherwise(F.col('trip'))
+                         )
+
+    df2 = df2.withColumn('trip', F.when((F.col('tripType') == 3) &
+                                        (F.lag('tripType', 1).over(Window.orderBy(ts_name)) == 2),
+                                        4).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
+    df2 = df2.withColumn('trip', F.when((F.col('trip') == 2) &
+                                        (F.lag('trip', 1).over(Window.orderBy(ts_name)) == 4),
+                                        1).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
     df2 = df2.withColumn('trip', F.when(F.col('trip').isNotNull() &
                                         (F.col('tripType') == 2) &
-                                        (F.lag('tripType',1).over(Window.orderBy(ts_name)) == 3),
+                                        (F.lag('tripType', 1).over(Window.orderBy(ts_name)) == 3),
                                         1).otherwise(F.col('trip'))
-                        ).orderBy(ts_name)
-    
+                         ).orderBy(ts_name)
+
     df2 = df2.withColumn('trip', F.when(F.col('trip').isNotNull() &
                                         (F.col('tripType') == 4) &
-                                        (F.lead('tripType',1).over(Window.orderBy(ts_name)) == 0),
+                                        (F.lead('tripType', 1).over(Window.orderBy(ts_name)) == 0),
                                         4).otherwise(F.col('trip'))
-                        ).orderBy(ts_name)
-    
+                         ).orderBy(ts_name)
+
     df2 = trip_segmentation(df2, ts_name, speed_segment_length).checkpoint()
-    
+
     stop = (F.col('trip') == 1)
-    
+
     ct = df2.filter(stop).count()
     s = ct
     s_ = -1
-    
-    #k = 1
-    while (s - s_ != 0):
 
+    while (s - s_ != 0):
         s_ = s
-        
+
         ct_ = ct
-        
+
         # identify segments within a trip
         df2 = trip_segmentation(df2, ts_name, speed_segment_length).checkpoint()
-        
+
         ct = df2.filter(stop).count()
-        
-        s = ct+ct_
-        
-        #print((k, s, s_, ct, ct_))
-        #k = k + 1
-        
+
+        s = ct + ct_
+
     df2 = trip_segmentation(df2, ts_name, speed_segment_length).checkpoint()
-    
+
     # set trip mode
-    #n_percentile = F.expr('percentile_approx(roundSpeed, {})'.format(str(speed_percentile)))
-    n_percentile = F.expr('percentile(roundSpeed, {})'.format(str(speed_percentile*0.01)))
-    
-    df2 = df2.withColumn('tmp', n_percentile.over(Window.partitionBy('segment'))).orderBy(ts_name)                     
-    
+    # n_percentile = F.expr('percentile_approx(roundSpeed, {})'.format(str(speed_percentile*0.01)))
+    n_percentile = F.expr('percentile(roundSpeed, {})'.format(str(speed_percentile * 0.01)))
+
+    df2b = df2.select(ts_name, 'tripType', 'trip', 'segment', 'roundSpeed')
+    df2b = df2b.withColumn('tmp', F.when((F.col('roundSpeed') == 0) &
+                                         (F.col('trip') != 4) &
+                                         (F.col('tripType') != 0),
+                                         0)
+                           )
+    df2b = df2b.filter(F.col('tmp').isNull()).drop('tmp').orderBy(ts_name)
+
+    df2b = df2b.withColumn('tmp', n_percentile.over(Window.partitionBy('segment'))).orderBy(ts_name)
+
+    df2 = df2.join(df2b, [ts_name, 'tripType', 'trip', 'roundSpeed', 'segment'], how='left').orderBy(ts_name)
+    df2 = df2.withColumn('tmp', F.when(F.col('segment').isNotNull() &
+                                       F.col('tmp').isNull(),
+                                       F.first('tmp', ignorenulls=True)
+                                       .over(Window.partitionBy('segment')
+                                             .rowsBetween(0, Window.unboundedFollowing)
+                                             )
+                                       ).otherwise(F.col('tmp'))
+                         ).orderBy(ts_name)
+
     df2 = df2.withColumn('tripMOT', F.when(F.col('tmp').isNotNull(),
                                            app_fun(F.col('tmp'))
-                                          ).otherwise(F.col('tripMOT'))
-                        )
-    
+                                           ).otherwise(F.col('tripMOT'))
+                         )
+
     df2 = df2.withColumn('tripMOT', F.when(F.col('tripType') == 3, None).otherwise(F.col('tripMOT')))
-    
-    df2 = df2.drop(*['segment','pause','pause_dist','tmp']).orderBy(ts_name)
-    
-    df3 = df2.select(ts_name,'lat','lon','duration','distance','cum_pause','tripType','trip','tripMOT')\
-             .filter(F.col('tripType') != 0).orderBy(ts_name)
-    df2 = df2.drop(*['trip','tripMOT'])
+
+    df2 = df2.drop(*['segment', 'pause', 'pause_dist', 'tmp']).orderBy(ts_name)
+
+    df3 = df2.select(ts_name, 'lat', 'lon', 'duration', 'distance', 'cum_pause', 'tripType', 'trip', 'tripMOT') \
+        .filter(F.col('tripType') != 0).orderBy(ts_name)
+    df2 = df2.drop(*['trip', 'tripMOT'])
     df3 = df3.filter(F.col('tripMOT').isNotNull()).orderBy(ts_name)
-    
+
     df3 = df3.withColumn('ch', F.when(F.col('tripType') == 1, F.monotonically_increasing_id())
-                        ).orderBy(ts_name)
+                         ).orderBy(ts_name)
     df3 = df3.withColumn('ch', F.when(F.col('ch').isNull() &
-                                       (F.col('tripType') != 0),
-                                       F.last('ch', ignorenulls=True)
-                                        .over(Window.orderBy(ts_name).rowsBetween(Window.unboundedPreceding, 0))
+                                      (F.col('tripType') != 0),
+                                      F.last('ch', ignorenulls=True)
+                                      .over(Window.orderBy(ts_name).rowsBetween(Window.unboundedPreceding, 0))
                                       ).otherwise(F.col('ch'))
-                        ).orderBy(F.col('ch'))
-    
+                         ).orderBy(F.col('ch'))
+
     # merge adjacent segments with equal tripMOT
     w4 = Window.partitionBy('ch').orderBy(ts_name)
     df3 = df3.withColumn('trip', F.when((F.col('trip') == 4) &
-                                            (F.lead('trip',1).over(w4) == 1) &
-                                            (F.col('tripMOT') == F.lead('tripMOT',1).over(w4)),
-                                            F.col('tripType')
-                                           ).otherwise(F.col('trip'))
-                            ).orderBy(ts_name)
-    
+                                        (F.lead('trip', 1).over(w4) == 1) &
+                                        (F.col('tripMOT') == F.lead('tripMOT', 1).over(w4)),
+                                        F.col('tripType')
+                                        ).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
     df3 = df3.withColumn('trip', F.when((F.col('trip') == 1) &
-                                            (F.lag('trip',1).over(w4) == F.lag('tripType',1).over(w4)) &
-                                            (F.col('tripMOT') == F.lag('tripMOT',1).over(w4)),
-                                            F.col('tripType')
-                                           ).otherwise(F.col('trip'))
-                            ).orderBy(ts_name)
-    
+                                        (F.lag('trip', 1).over(w4) == F.lag('tripType', 1).over(w4)) &
+                                        (F.col('tripMOT') == F.lag('tripMOT', 1).over(w4)),
+                                        F.col('tripType')
+                                        ).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
     df3 = df3.withColumn('trip', F.when((F.col('trip') == 1) &
-                                            (F.lag('tripType',1).over(w4) == 3),
-                                            F.col('tripType')
-                                           ).otherwise(F.col('trip'))
-                            ).orderBy(ts_name)
-    
+                                        (F.lag('tripType', 1).over(w4) == 3),
+                                        F.col('tripType')
+                                        ).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
     df3 = df3.withColumn('trip', F.when(F.col('trip').isNull() &
-                                            (F.col('tripType') == 3),
-                                            F.col('tripType')
-                                           ).otherwise(F.col('trip'))
-                            ).orderBy(ts_name)
-    
+                                        (F.col('tripType') == 3),
+                                        F.col('tripType')
+                                        ).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
     # trip segmentation
     df3 = trip_segmentation(df3, ts_name, speed_segment_length)
-    
+
     # remove short trips
-    df3 = df3.withColumn('cum_dist', F.sum('distance').over(w4.rowsBetween(Window.unboundedPreceding,0))
-                        ).orderBy(ts_name)
-    
+    df3 = df3.withColumn('cum_dist', F.sum(dist_name).over(w4.rowsBetween(Window.unboundedPreceding, 0))
+                         ).orderBy(ts_name)
+
     df3 = df3.withColumn('tmp', F.when((F.col('tripType') == 4) &
                                        ((F.col('cum_dist') < min_trip_length) |
                                         (F.col('pause') < min_trip_duration)),
                                        0)
-                        ).orderBy(ts_name)
-    
+                         ).orderBy(ts_name)
+
     df3 = df3.withColumn('tmp', F.when(F.col('tmp').isNull(),
                                        F.last('tmp', ignorenulls=True)
-                                        .over(w4.rowsBetween(0, Window.unboundedFollowing))
-                                      ).otherwise(F.col('tmp'))
-                        ).orderBy(ts_name)
-    
+                                       .over(w4.rowsBetween(0, Window.unboundedFollowing))
+                                       ).otherwise(F.col('tmp'))
+                         ).orderBy(ts_name)
+
     df3 = df3.withColumn('tmp', F.when(F.col('tmp').isNull() &
                                        (F.col('trip') == 4) &
                                        ((F.col('cum_dist') < min_trip_length) |
                                         (F.col('pause') < min_trip_duration)),
                                        1).otherwise(F.col('tmp'))
-                        ).orderBy(ts_name)
-                        
+                         ).orderBy(ts_name)
 
     df3 = df3.withColumn('tmp', F.when(F.col('tmp').isNull(),
                                        F.last('tmp', ignorenulls=True)
-                                        .over(w2.rowsBetween(0, Window.unboundedFollowing))
-                                      ).otherwise(F.col('tmp'))
-                        ).orderBy(ts_name)
-    
+                                       .over(w2.rowsBetween(0, Window.unboundedFollowing))
+                                       ).otherwise(F.col('tmp'))
+                         ).orderBy(ts_name)
+
     ## reset short isolated trips
     df3 = df3.withColumn('trip', F.when(F.col('tmp') == 0, 0).otherwise(F.col('trip')))
     df3 = df3.withColumn('tripMOT', F.when(F.col('tmp') == 0, 0).otherwise(F.col('tripMOT')))
-    
+
+    df3 = df3.withColumn('tmp2', F.when((F.col('tmp') == 1) &
+                                        (F.col('tripType') == 1),
+                                        2)
+                         )
+    df3 = df3.withColumn('tmp2', F.when(F.col('tmp2').isNull(),
+                                        F.last('tmp2', ignorenulls=True)
+                                        .over(w2.rowsBetween(Window.unboundedPreceding, 0))
+                                        ).otherwise(F.col('tmp2'))
+                         ).orderBy(ts_name)
+
+    df3 = df3.withColumn('trip', F.when(F.col('tmp2') == 2, 0).otherwise(F.col('trip')))
+    df3 = df3.withColumn('tripMOT', F.when(F.col('tmp2') == 2, 0).otherwise(F.col('tripMOT')))
+    df3 = df3.withColumn('tmp', F.when(F.col('tmp2') == 2, None).otherwise(F.col('tmp')))
+    df3 = df3.drop('tmp2')
+
     ## merge short trip segments
     df3 = df3.withColumn('tripMOT', F.when(F.col('tmp') == 1, None).otherwise(F.col('tripMOT')))
-    
+
     df3 = df3.withColumn('tripMOT', F.when((F.col('tmp') == 1) &
                                            (F.col('trip') == 1),
-                                           F.lag('tripMOT',1).over(Window.orderBy(ts_name))
-                                          ).otherwise(F.col('tripMOT'))
-                        ).orderBy(ts_name)
-    
+                                           F.lag('tripMOT', 1).over(Window.orderBy(ts_name))
+                                           ).otherwise(F.col('tripMOT'))
+                         ).orderBy(ts_name)
+
     df3 = df3.withColumn('tripMOT', F.when((F.col('tmp') == 1) &
                                            F.col('tripMOT').isNull(),
                                            F.last('tripMOT', ignorenulls=True)
-                                            .over(w2.rowsBetween(Window.unboundedPreceding,0))
-                                          ).otherwise(F.col('tripMOT'))
-                        ).orderBy(ts_name)
-    
+                                           .over(w2.rowsBetween(Window.unboundedPreceding, 0))
+                                           ).otherwise(F.col('tripMOT'))
+                         ).orderBy(ts_name)
+
     df3 = df3.withColumn('trip', F.when((F.col('tmp') == 1) &
                                         (F.col('trip') == 1),
                                         F.col('tripType')
-                                       ).otherwise(F.col('trip'))
-                        )
-    
-    df3 = df3.withColumn('trip', F.when(F.col('tmp').isNull() & 
-                                        (F.lead('tmp',1).over(Window.orderBy(ts_name)) == 1) &
+                                        ).otherwise(F.col('trip'))
+                         )
+
+    df3 = df3.withColumn('trip', F.when(F.col('tmp').isNull() &
+                                        (F.lead('tmp', 1).over(Window.orderBy(ts_name)) == 1) &
                                         (F.col('trip') == 4),
                                         F.col('tripType')
-                                       ).otherwise(F.col('trip'))
-                        )
-    
+                                        ).otherwise(F.col('trip'))
+                         )
+
     ## merge adjacent segments
     df3 = df3.withColumn('trip', F.when((F.col('trip') == 4) &
-                                            (F.lead('trip',1).over(w4) == 1) &
-                                            (F.col('tripMOT') == F.lead('tripMOT',1).over(w4)),
-                                            F.col('tripType')
-                                           ).otherwise(F.col('trip'))
-                            ).orderBy(ts_name)
-    
+                                        (F.lead('trip', 1).over(w4) == 1) &
+                                        (F.col('tripMOT') == F.lead('tripMOT', 1).over(w4)),
+                                        F.col('tripType')
+                                        ).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
     df3 = df3.withColumn('trip', F.when((F.col('trip') == 1) &
-                                            (F.lag('trip',1).over(w4) == F.lag('tripType',1).over(w4)) &
-                                            (F.col('tripMOT') == F.lag('tripMOT',1).over(w4)),
-                                            F.col('tripType')
-                                           ).otherwise(F.col('trip'))
-                            ).orderBy(ts_name)
-    
+                                        (F.lag('trip', 1).over(w4) == F.lag('tripType', 1).over(w4)) &
+                                        (F.col('tripMOT') == F.lag('tripMOT', 1).over(w4)),
+                                        F.col('tripType')
+                                        ).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
     df3 = df3.withColumn('trip', F.when((F.col('trip') == 1) &
-                                            (F.lag('tripType',1).over(w4) == 3),
-                                            F.col('tripType')
-                                           ).otherwise(F.col('trip'))
-                            ).orderBy(ts_name)
-    
+                                        (F.lag('tripType', 1).over(w4) == 3),
+                                        F.col('tripType')
+                                        ).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
     df3 = df3.withColumn('trip', F.when(F.col('trip').isNull() &
-                                            (F.col('tripType') == 3),
-                                            F.col('tripType')
-                                           ).otherwise(F.col('trip'))
-                            ).orderBy(ts_name)
-    
+                                        (F.col('tripType') == 3),
+                                        F.col('tripType')
+                                        ).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
     # trip segmentation
     df3 = trip_segmentation(df3, ts_name, speed_segment_length)
     df3 = df3.drop('ch').orderBy(ts_name).cache()
-    
-    df2 = df2.join(df3, [ts_name,'lat','lon','duration','distance','cum_pause',
+
+    df2 = df2.join(df3, [ts_name, 'lat', 'lon', 'duration', 'distance', 'cum_pause',
                          'tripType'], how='left').orderBy(ts_name)
     df2 = df2.withColumn('tripMOT', F.when(F.col('tripType') == 3, 0).otherwise(F.col('tripMOT')))
     df2 = df2.withColumn('tripMOT', F.when(F.col('tripMOT').isNull(), 0).otherwise(F.col('tripMOT')))
     df2 = df2.withColumn('trip', F.when(F.col('trip').isNull(), F.col('tripType')).otherwise(F.col('trip')))
-    
-    df3.persist()                     
-                         
-    df2 = df2.drop(*['tmp','cum_dist','roundSpeed','pause','pause_dist','segment'])
-    
+
+    df3.unpersist()
+
+    df2 = df2.withColumn('trip', F.when((F.col('tmp') == 1) &
+                                        (F.col('tripMOT') == 0),
+                                        0).otherwise(F.col('trip'))
+                         )
+
+    # df2.select(ts_name,'trip','tripMOT','tmp').show(10000,False)
+
+    df2 = df2.drop(*['tmp', 'cum_dist', 'roundSpeed', 'pause', 'pause_dist', 'segment'])
+
     # compute trip number
     df2 = df2.withColumn('tripNumber', F.when(F.col('trip') == 1, F.monotonically_increasing_id()))
     df2 = df2.withColumn('tripNumber', F.when(F.col('tripNumber').isNull() &
                                               F.col('trip').isNotNull(),
                                               F.last('tripNumber', ignorenulls=True).over(w1)
-                                             ).otherwise(F.col('tripNumber'))
-                        ).orderBy(ts_name)
+                                              ).otherwise(F.col('tripNumber'))
+                         ).orderBy(ts_name)
     df2 = df2.withColumn('tripNumber', F.when(F.col('tripNumber').isNotNull(),
                                               F.col('tripNumber') + F.lit(1)
-                                             ).otherwise(F.col('tripNumber'))
-                        )
+                                              ).otherwise(F.col('tripNumber'))
+                         )
     df2 = df2.withColumn('tripNumber', F.when(F.col('tripType') == 0, 0).otherwise(F.col('tripNumber')))
     df2 = df2.withColumn('tripNumber', F.when(F.col('tripNumber').isNull(), 0).otherwise(F.col('tripNumber')))
-    
+
     # reset tripType
     df2 = df2.withColumn('tripType', F.col('trip')).orderBy(ts_name)
     df2 = df2.withColumn('tripNumber', F.when((F.col('tripMOT') == 0) &
@@ -2255,9 +2342,8 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                               0).otherwise(F.col('tripNumber'))
                          ).orderBy(ts_name)
 
-    df2 = df2.select(ts_name,'dow','lat','lon','fixTypeCode','tripNumber','tripType','tripMOT')
-   
-    return df2
+    df2 = df2.select(ts_name, 'dow', 'lat', 'lon', 'fixTypeCode', 'tripNumber', 'tripType', 'tripMOT')
 
+    return df2
 
 ##########################################################################################################
