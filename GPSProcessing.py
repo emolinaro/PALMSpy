@@ -1875,7 +1875,7 @@ def trip_mode_type(roundSpeed, vehicle_speed_cutoff, bicycle_speed_cutoff, walk_
             value = 3  # vehicle trip
     except:
         value = None
-    
+
     return value
 
 ##########################################################################################################
@@ -2052,7 +2052,8 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                             ).otherwise(0.0)
                          ).orderBy(ts_name)
 
-    df2 = df2.withColumn('roundSpeed', F.when(F.col('trip').isNotNull(),
+    df2 = df2.withColumn('roundSpeed', F.when(F.col('trip').isNotNull() &
+                                              F.col(speed_name).isNotNull(),
                                               udf_round(F.col(speed_name)).cast(IntegerType())))
 
     """
