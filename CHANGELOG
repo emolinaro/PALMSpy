@@ -1,0 +1,17 @@
+CHANGELOG FILE
+===============
+
+
+2019-05-07 Emiliano Molinaro <emil.molinaro@gmail.com>
+
+	* Version 1.5
+	
+	* GPSProcessing.py (trip_segmentation): improvements to match PALMS trip segmatation algorithm.
+
+	* GPSProcessing.py (set_distance_and_speed): recalculate the distance and velocity at each valid fix. 
+												 Filter out fixes where veocity is null because of repeated timestamp.
+
+	* habitus.py: added distance and velocity calculation (set_distance_and_speed) before application of all the filters.
+
+	* habitus.py: filter data according to new epoch applied before distance and velocity calculation.
+
