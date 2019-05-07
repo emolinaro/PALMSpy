@@ -329,9 +329,10 @@ def main(gps_path, acc_path, config_file,
 		print(pc.WARNING + " ===> set fix type..." + pc.ENDC)
 		start_time = time.time()
 		gps_data = set_fix_type(gps_data, ts_name, los_max_duration).cache()
-		gps_data.count()
+		num_fixes = gps_data.count()
 		elapsed_time = time.time() - start_time
 		print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+		print(pc.WARNING + "      number of fixes: {}".format(str(num_fixes)) + pc.ENDC)
 		print(" ")
 
 		# Filter data according to new epoch
@@ -347,10 +348,12 @@ def main(gps_path, acc_path, config_file,
 		else:
 			start_time = time.time()
 			gps_data = select_gps_intervals(gps_data, ts_name, interval).cache()
-			gps_data.count()
+			diff_fixes = num_fixes - gps_data.count()
+			num_fixes = num_fixes - diff_fixes
 			elapsed_time = time.time() - start_time
 			print(pc.WARNING + "      time elapsed: {}".format(
 				time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+			print(pc.WARNING + "      number of fixes: {}".format(str(num_fixes)) + pc.ENDC)
 			print(" ")
 
 		# Calculate distance and speed at each epoch
@@ -363,46 +366,56 @@ def main(gps_path, acc_path, config_file,
 			print(pc.WARNING + " ===> apply velocity filter..." + pc.ENDC)
 			start_time = time.time()
 			gps_data = filter_speed(gps_data, speed_col, max_speed).cache()
-			gps_data.count()
+			diff_fixes = num_fixes - gps_data.count()
+			num_fixes = num_fixes - diff_fixes
 			elapsed_time = time.time() - start_time
 			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+			print(pc.WARNING + "      {} fixes filtered out".format(str(diff_fixes)) + pc.ENDC)
 			print(" ")
 
 			print(pc.WARNING + " ===> apply acceleration filter..." + pc.ENDC)
 			start_time = time.time()
 			gps_data = filter_acceleration(gps_data, speed_col, ts_name).cache()
-			gps_data.count()
+			diff_fixes = num_fixes - gps_data.count()
+			num_fixes = num_fixes - diff_fixes
 			elapsed_time = time.time() - start_time
 			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+			print(pc.WARNING + "      {} fixes filtered out".format(str(diff_fixes)) + pc.ENDC)
 			print(" ")
 
 			print(pc.WARNING + " ===> apply elevation change filter..." + pc.ENDC)
 			start_time = time.time()
 			gps_data = filter_height(gps_data, ele_col, ts_name, max_ele_change).cache()
-			gps_data.count()
+			diff_fixes = num_fixes - gps_data.count()
+			num_fixes = num_fixes - diff_fixes
 			elapsed_time = time.time() - start_time
 			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+			print(pc.WARNING + "      {} fixes filtered out".format(str(diff_fixes)) + pc.ENDC)
 			print(" ")
 
 			print(pc.WARNING + " ===> apply three fixes filter..." + pc.ENDC)
 			start_time = time.time()
 			gps_data = filter_change_dist_3_fixes(gps_data, dist_col, ts_name, min_change_3_fixes).cache()
-			gps_data.count()
+			diff_fixes = num_fixes - gps_data.count()
+			num_fixes = num_fixes - diff_fixes
 			elapsed_time = time.time() - start_time
 			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+			print(pc.WARNING + "      {} fixes filtered out".format(str(diff_fixes)) + pc.ENDC)
 			print(" ")
 
 		print(pc.WARNING + " ===> align timestamps..." + pc.ENDC)
 		start_time = time.time()
 		gps_data = round_timestamp(gps_data, ts_name, interval).cache()
 		gps_data = gps_data.checkpoint()
-		gps_data.count()
+		diff_fixes = num_fixes - gps_data.count()
+		num_fixes = num_fixes - diff_fixes
 		elapsed_time = time.time() - start_time
 		print(pc.WARNING + "      time elapsed: {}".format(
 			time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+		print(pc.WARNING + "      number of fixes after all filters applied: {}".format(str(num_fixes)) + pc.ENDC)
 		print(" ")
 
-		#gps_data = gps_data.limit(1000) ######################################<<<<<<<<<<<<<<<
+		gps_data = gps_data.limit(100) ######################################<<<<<<<<<<<<<<<
 
 		# Trip detection
 		if trip_detection:
@@ -441,14 +454,16 @@ def main(gps_path, acc_path, config_file,
 			else:
 				insert_max_seconds = los_max_duration
 
-			print(pc.WARNING + " ===> fill in missing value..." + pc.ENDC)
+			print(pc.WARNING + " ===> fill in missing values..." + pc.ENDC)
 			start_time = time.time()
 			gps_data = fill_timestamp(gps_data, ts_name, fix_type_col, interval, insert_max_seconds).cache()
 			gps_data = gps_data.checkpoint()
-			gps_data.count()
+			diff_fixes = gps_data.count() - num_fixes
+			num_fixes = num_fixes + diff_fixes
 			elapsed_time = time.time() - start_time
 			print(pc.WARNING + "      time elapsed: {}".format(
 				time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+			print(pc.WARNING + "      number of fixes after inserts: {}".format(str(num_fixes)) + pc.ENDC)
 			print(" ")
 
 		gps_data = gps_data.withColumn('ID', F.lit(id)).orderBy(ts_name)

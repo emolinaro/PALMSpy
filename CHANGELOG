@@ -14,3 +14,5 @@ CHANGELOG FILE
 
 	* habitus.py: filter data according to new epoch applied before distance and velocity calculation.
 
+	* habitus.py: added information about the number of fixes after filtering and inserting missing values.
+

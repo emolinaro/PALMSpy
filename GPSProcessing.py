@@ -1243,6 +1243,7 @@ def set_pause(df, index, ts_name):
 ##########################################################################################################
         
 def check_case(df, index, ts_name, min_dist_per_min, min_pause_duration, max_pause_time):
+
         """
         
         """
@@ -1938,6 +1939,7 @@ def trip_mode_type(roundSpeed, vehicle_speed_cutoff, bicycle_speed_cutoff, walk_
 ##########################################################################################################
 
 def trip_segmentation(df, ts_name, speed_segment_length):
+
     """
 
     """
@@ -2361,8 +2363,6 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                         (F.col('tripMOT') == 0),
                                         0).otherwise(F.col('trip'))
                          )
-
-    # df2.select(ts_name,'trip','tripMOT','tmp').show(10000,False)
 
     df2 = df2.drop(*['tmp', 'cum_dist', 'roundSpeed', 'pause', 'pause_dist', 'segment'])
 
