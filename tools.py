@@ -10,7 +10,7 @@ class PColors:
 
 class Metadata:
     name = 'HABITUS'
-    version = '1.5'
+    version = '1.6'
     mantainer = 'Emiliano Molinaro'
     email = 'emil.molinaro@gmail.com'
     authors = 'Emiliano Molinaro'
