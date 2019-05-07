@@ -294,6 +294,64 @@ def set_fix_type(df, ts_name, ws):
 
 ##########################################################################################################
 
+def set_distance_and_speed(df, dcol, scol, tscol):
+    """
+        Calculate distance and speed at each epoch
+
+    """
+
+    # Calculate distance between two fixes
+    app_fun = F.udf(lambda a, b, c, d: calc_distance(a, b, c, d))
+
+    # Define a window over timestamps
+    w = Window.orderBy(tscol)
+    # df = df.drop_duplicates()
+
+    minp = df.select(F.min(tscol).cast('long')).first()[0]
+
+    df2 = df.withColumn('total_sec', F.col(tscol).cast('long'))
+
+    # Define duration of current fix
+    df2 = df2.withColumn('duration', F.col(tscol).cast(IntegerType()) -
+                         F.lag(F.col(tscol).cast(IntegerType()), 1, minp)
+                         .over(w)
+                         )
+
+    cond = (F.col('fixTypeCode') == 1)
+
+    first_lat = df2.select('lat').first()[0]
+    first_lon = df2.select('lon').first()[0]
+    last_lat = df2.select(F.last('lat')).first()[0]
+    last_lon = df2.select(F.last('lon')).first()[0]
+
+    lat0 = F.col('lat').cast(DoubleType())
+    lon0 = F.col('lon').cast(DoubleType())
+    lat1 = F.lead(F.col('lat'), 1, last_lat).over(w)
+    lon1 = F.lead(F.col('lon'), 1, last_lon).over(w)
+    lat2 = F.lag(F.col('lat'), 1, first_lat).over(w)
+    lon2 = F.lag(F.col('lon'), 1, first_lon).over(w)
+
+    # Calculate the distance traveled from last fix
+    df2 = df2.withColumn(dcol, F.when((F.col('lat') != first_lat) & (F.col('lat') != last_lat),
+                                      app_fun(lat0, lon0, lat2, lon2)
+                                      ).otherwise(0.0)
+                         ).orderBy(tscol)
+
+    # Calculate velocity
+    df2 = df2.withColumn(scol, F.when(  # (F.col(dcol) != 0.0) &
+        cond,
+        3.6 * F.col(dcol) / F.col('duration')
+    ).otherwise(0.0)
+                         )
+    # filter points where the velocity is not defined (points with the same timestamp)
+    df2 = df2.filter(F.col(scol).isNotNull())
+
+    df2 = df2.drop(*['duration', 'total_sec'])
+
+    return df2
+
+##########################################################################################################
+
 def fill_timestamp(df, ts_name, fix_type_name, interval, ws):
     """
         Fill in missing timestamps with the last available data up to a given time range
@@ -447,11 +505,10 @@ def filter_change_dist_3_fixes(df, dcol, tscol, dmin):
     lat2 = F.lag(F.col('lat'),1,first_lat).over(w)
     lon2 = F.lag(F.col('lon'),1,first_lon).over(w)
     
-    # Recalculate the traveled from last fix
+    # Recalculate the distance traveled from last fix
     df2 = df.withColumn(dcol, F.when((F.col('lat') != first_lat) & (F.col('lat') != last_lat),
-                                            app_fun(lat0,lon0,lat2,lon2)
-                                          )
-                                     .otherwise(F.col(dcol))
+                                     app_fun(lat0,lon0,lat2,lon2)
+                                    ).otherwise(F.col(dcol))
                         )
     
     # Calculate distance between next fix and previous fix
@@ -2046,30 +2103,16 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                         ).otherwise(F.col('trip'))
                          ).orderBy(ts_name)
 
-    # set trip start according to speed (recalculate the speed)
-    # df2 = df2.withColumn(speed_name, F.when((F.col(dist_name) != 0.0),
-    #                                         3.6 * F.col(dist_name) / F.col('duration')
-    #                                         ).otherwise(0.0)
-    #                      ).orderBy(ts_name)
+    df2 = df2.withColumn('roundSpeed', F.when(F.col('trip').isNotNull(),
+                                              udf_round(F.col(speed_name)).cast(IntegerType())
+                                              )
+                         )
 
-
-    df2 = df2.withColumn('roundSpeed', F.when(F.col('trip').isNotNull() &
-                                              F.col(speed_name).isNotNull(),
-                                              udf_round(F.col(speed_name)).cast(IntegerType())))
-
-
-    df2 = df2.withColumn('trip', F.when((F.col('trip') == 2) &
-                                         (F.lag('roundSpeed',1).over(Window.orderBy(ts_name)) == 0),
-                                         4).otherwise(F.col('trip'))
-                        ).orderBy(ts_name) ## use this block instead of the following if do not recalculate the speed
-    """
-    #######
     df2 = df2.withColumn('trip', F.when((F.col('trip') == 2) &
                                         (F.col('roundSpeed') == 0),
                                         4).otherwise(F.col('trip'))
                          ).orderBy(ts_name)
-    #######
-    """
+
     df2 = df2.withColumn('trip', F.when((F.col('trip') == 4) &
                                         (F.lag('trip', 1).over(Window.orderBy(ts_name)) == 4),
                                         F.col('tripType')

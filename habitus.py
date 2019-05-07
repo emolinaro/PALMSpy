@@ -334,6 +334,29 @@ def main(gps_path, acc_path, config_file,
 		print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
 		print(" ")
 
+		# Filter data according to new epoch
+		print(pc.WARNING + " ===> select GPS data every {} seconds...".format(str(interval)) + pc.ENDC)
+
+		if interval == step:
+			print(pc.WARNING + "      keep data for each epoch" + pc.ENDC)
+			print(" ")
+		elif interval < step:
+			print(pc.FAIL + "      interval smaller than one epoch ({} seconds): keep all GPS data".format(
+				str(step)) + pc.ENDC)
+			print(" ")
+		else:
+			start_time = time.time()
+			gps_data = select_gps_intervals(gps_data, ts_name, interval).cache()
+			gps_data.count()
+			elapsed_time = time.time() - start_time
+			print(pc.WARNING + "      time elapsed: {}".format(
+				time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+			print(" ")
+
+		# Calculate distance and speed at each epoch
+		gps_data = set_distance_and_speed(gps_data, dist_col, speed_col, ts_name).cache()
+		gps_data.count()
+
 		# Apply filters
 		if filter_invalid_values:
 
@@ -364,23 +387,6 @@ def main(gps_path, acc_path, config_file,
 			print(pc.WARNING + " ===> apply three fixes filter..." + pc.ENDC)
 			start_time = time.time()
 			gps_data = filter_change_dist_3_fixes(gps_data, dist_col, ts_name, min_change_3_fixes).cache()
-			gps_data.count()
-			elapsed_time = time.time() - start_time
-			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
-			print(" ")
-
-		# Filter data according to new epoch
-		print(pc.WARNING +  " ===> select GPS data every {} seconds...".format(str(interval)) + pc.ENDC)
-
-		if interval == step:
-			print(pc.WARNING + "      keep data for each epoch" + pc.ENDC)
-			print(" ")
-		elif interval < step:
-			print(pc.FAIL + "      interval smaller than one epoch ({} seconds): keep all GPS data".format(str(step)) + pc.ENDC)
-			print(" ")
-		else:
-			start_time = time.time()
-			gps_data = select_gps_intervals(gps_data, ts_name, interval).cache()
 			gps_data.count()
 			elapsed_time = time.time() - start_time
 			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
