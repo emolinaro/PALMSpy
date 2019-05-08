@@ -32,6 +32,9 @@
 		},
 		"network":{
 			"timeout": "800s"
+		},
+		"default":{
+			"parallelism": "20"
 		}
 	},
 
