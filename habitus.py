@@ -420,7 +420,7 @@ def main(gps_path, acc_path, config_file,
 		print("      number of fixes after all filters applied: {}".format(str(num_fixes)))
 		print(" ")
 
-		gps_data = gps_data.limit(100) ######################################<<<<<<<<<<<<<<<
+		#gps_data = gps_data.limit(100) ######################################<<<<<<<<<<<<<<<
 
 		# Trip detection
 		if trip_detection:
