@@ -432,6 +432,15 @@ sparkargs.add_argument(
 )
 
 sparkargs.add_argument(
+	"--default-partitions",
+	type=int,
+	metavar='INT',
+	dest="default_partitions",
+	default = 20,
+	help="Default number of partitions returned by transformations like join, reduceByKey, and parallelize"
+)
+
+sparkargs.add_argument(
 	"--shuffle-partitions",
 	type=int,
 	metavar='INT',

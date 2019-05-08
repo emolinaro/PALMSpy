@@ -74,7 +74,7 @@ def main(gps_path, acc_path, config_file,
          sedentary_bout_upper_limit, sedentary_bout_tolerance,
          very_hard_cutoff, hard_cutoff, moderate_cutoff, light_cutoff,
          merge_data_to_gps, merge_data_to_acc,
-         driver_mem, executor_mem, mem_fraction, shuffle_partitions, mem_offHeap_enabled,
+         driver_mem, executor_mem, mem_fraction, default_partitions, shuffle_partitions, mem_offHeap_enabled,
          mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
          broadcast_timeout, network_timeout):
 
@@ -115,7 +115,7 @@ def main(gps_path, acc_path, config_file,
 		 sedentary_bout_upper_limit, sedentary_bout_tolerance,
 		 very_hard_cutoff, hard_cutoff, moderate_cutoff, light_cutoff,
 		 merge_data_to_gps, merge_data_to_acc,
-		 driver_mem, executor_mem, mem_fraction, shuffle_partitions, mem_offHeap_enabled,
+		 driver_mem, executor_mem, mem_fraction, default_partitions, shuffle_partitions, mem_offHeap_enabled,
 		 mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
 		 broadcast_timeout, network_timeout)
 	settings = params.dump_dict()
@@ -143,7 +143,8 @@ def main(gps_path, acc_path, config_file,
 							   ('spark.sql.codegen.wholeStage', settings['spark']['sql']['codegen']['wholeStage']),
 							   ('spark.sql.broadcastTimeout', settings['spark']['sql']['broadcastTimeout']),
 							   ('spark.network.timeout', settings['spark']['network']['timeout']),
-							   ('spark.sql.codegen.fallback', settings['spark']['sql']['codegen']['fallback'])
+							   ('spark.sql.codegen.fallback', settings['spark']['sql']['codegen']['fallback']),
+							   ('spark.default.parallelism', settings['spark']['default']['parallelism'])
 							   ]
 							  )
 	# ('spark.driver.host', 'localhost') # TODO: allows to pass configs with spark-submit, without spark.conf file
@@ -167,7 +168,7 @@ def main(gps_path, acc_path, config_file,
 
 	header()
 
-	print("Default number of partitions: {}".format(str(sc.defaultParallelism)))
+	print("Default number of partitions: {}".format(str(default_partitions)))
 
 	# List accelerometer and GPS data files have the same name
 	list_file_acc = sorted(os.listdir(acc_path))
