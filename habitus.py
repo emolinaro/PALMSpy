@@ -54,7 +54,7 @@ def header():
 
 	list = textwrap.wrap(header, width=30)
 	for element in list:
-		print(pc.BOLD + element + pc.ENDC)
+		print(element)
 	print(" ")
 	pass
 
@@ -254,11 +254,11 @@ def main(gps_path, acc_path, config_file,
 	id = 1
 	for file_acc, file_gps in list_combined:
 
-		print(pc.OKGREEN  + "Dataset: {}".format(file_acc) + pc.ENDC)
+		print("Dataset: {}".format(file_acc))
 		print(" ")
 
 		# Process accelerometer data
-		print(pc.OKBLUE + pc.UNDERLINE + "processing accelerometer data\n" + pc.ENDC)
+		print("processing accelerometer data\n")
 
 		# Read raw accelerometer data
 		acc_data_raw = spark.read.text(acc_path + file_acc)
@@ -272,41 +272,40 @@ def main(gps_path, acc_path, config_file,
 		acc_data = select_acc_intervals(acc_data, ts_name, step, interval, include_vect, include_acc).cache()
 		acc_data.count()
 
-		print(pc.WARNING + " ===> determine activity count..." + pc.ENDC)
+		print(" ===> determine activity count...")
 		start_time = time.time()
 		acc_data = activity_count(acc_data, ts_name, interval,
 								  light_cutoff, moderate_cutoff, hard_cutoff, very_hard_cutoff, include_acc).cache()
 		acc_data.count()
 		elapsed_time = time.time() - start_time
-		print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+		print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
 		print(" ")
 
 		if mark_not_wearing_time:
-			print(pc.WARNING + " ===> determine non-wearing period..." + pc.ENDC)
+			print(" ===> determine non-wearing period...")
 			start_time = time.time()
 			acc_data = non_wear_filter(acc_data, ts_name, AC_name, AI_name, interval, minutes_zeros_row).cache()
 			acc_data.count()
 			elapsed_time = time.time() - start_time
-			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+			print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
 			print(" ")
 
 		if detect_activity_bouts:
-			print(pc.WARNING + " ===> detect activity bouts..." + pc.ENDC)
+			print(" ===> detect activity bouts...")
 			acc_data = activity_bout_filter(acc_data, ts_name, AC_name, 'activityBoutNumber', interval,
 											activity_bout_upper_limit, activity_bout_lower_limit,
 											activity_bout_duration, activity_bout_tolerance).cache()
 			acc_data.count()
-			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+			print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
 			print(" ")
 
 		if detect_sedentary_bouts:
-			print(pc.WARNING + " ===> detect sedentary bouts..." + pc.ENDC)
+			print(" ===> detect sedentary bouts...")
 			acc_data = sedentary_bout_filter(acc_data, ts_name, AC_name, 'sedentaryBoutNumber', interval,
 											sedentary_bout_upper_limit, 0,
 											sedentary_bout_duration, sedentary_bout_tolerance).cache()
 			acc_data.count()
-			print(pc.WARNING + "      time elapsed: {}".format(
-				time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+			print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
 			print(" ")
 
 		acc_data = acc_data.withColumn('ID', F.lit(id)).orderBy(ts_name)
@@ -317,11 +316,11 @@ def main(gps_path, acc_path, config_file,
 		acc_data = acc_data.checkpoint()
 		acc_data.count()
 
-		print(pc.OKGREEN + "Dataset: {}".format(file_gps) + pc.ENDC)
+		print("Dataset: {}".format(file_gps))
 		print(" ")
 
 		# Process GPS data
-		print(pc.OKBLUE + pc.UNDERLINE + "processing GPS data\n" + pc.ENDC)
+		print("processing GPS data\n")
 
 		# Read raw GPS data
 		gps_data_raw = spark.read.csv(gps_path + file_gps, header=True, inferSchema=True).cache()
@@ -334,24 +333,23 @@ def main(gps_path, acc_path, config_file,
 		gps_data = gen_gps_dataframe(gps_data_raw, datetime_format).cache()
 		gps_data.count()
 
-		print(pc.WARNING + " ===> set fix type..." + pc.ENDC)
+		print(" ===> set fix type...")
 		start_time = time.time()
 		gps_data = set_fix_type(gps_data, ts_name, los_max_duration).cache()
 		num_fixes = gps_data.count()
 		elapsed_time = time.time() - start_time
-		print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
-		print(pc.WARNING + "      number of fixes: {}".format(str(num_fixes)) + pc.ENDC)
+		print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+		print("      number of fixes: {}".format(str(num_fixes)))
 		print(" ")
 
 		# Filter data according to new epoch
-		print(pc.WARNING + " ===> select GPS data every {} seconds...".format(str(interval)) + pc.ENDC)
+		print(" ===> select GPS data every {} seconds...".format(str(interval)))
 
 		if interval == step:
-			print(pc.WARNING + "      keep data for each epoch" + pc.ENDC)
+			print("      keep data for each epoch")
 			print(" ")
 		elif interval < step:
-			print(pc.FAIL + "      interval smaller than one epoch ({} seconds): keep all GPS data".format(
-				str(step)) + pc.ENDC)
+			print("      interval smaller than one epoch ({} seconds): keep all GPS data".format(str(step)))
 			print(" ")
 		else:
 			start_time = time.time()
@@ -359,9 +357,8 @@ def main(gps_path, acc_path, config_file,
 			diff_fixes = num_fixes - gps_data.count()
 			num_fixes = num_fixes - diff_fixes
 			elapsed_time = time.time() - start_time
-			print(pc.WARNING + "      time elapsed: {}".format(
-				time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
-			print(pc.WARNING + "      number of fixes: {}".format(str(num_fixes)) + pc.ENDC)
+			print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+			print("      number of fixes: {}".format(str(num_fixes)))
 			print(" ")
 
 		# Calculate distance and speed at each epoch
@@ -371,56 +368,55 @@ def main(gps_path, acc_path, config_file,
 		# Apply filters
 		if filter_invalid_values:
 
-			print(pc.WARNING + " ===> apply velocity filter..." + pc.ENDC)
+			print(" ===> apply velocity filter...")
 			start_time = time.time()
 			gps_data = filter_speed(gps_data, speed_col, max_speed).cache()
 			diff_fixes = num_fixes - gps_data.count()
 			num_fixes = num_fixes - diff_fixes
 			elapsed_time = time.time() - start_time
-			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
-			print(pc.WARNING + "      {} fixes filtered out".format(str(diff_fixes)) + pc.ENDC)
+			print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+			print("      {} fixes filtered out".format(str(diff_fixes)))
 			print(" ")
 
-			print(pc.WARNING + " ===> apply acceleration filter..." + pc.ENDC)
+			print(" ===> apply acceleration filter...")
 			start_time = time.time()
 			gps_data = filter_acceleration(gps_data, speed_col, ts_name).cache()
 			diff_fixes = num_fixes - gps_data.count()
 			num_fixes = num_fixes - diff_fixes
 			elapsed_time = time.time() - start_time
-			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
-			print(pc.WARNING + "      {} fixes filtered out".format(str(diff_fixes)) + pc.ENDC)
+			print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+			print("      {} fixes filtered out".format(str(diff_fixes)))
 			print(" ")
 
-			print(pc.WARNING + " ===> apply elevation change filter..." + pc.ENDC)
+			print(" ===> apply elevation change filter...")
 			start_time = time.time()
 			gps_data = filter_height(gps_data, ele_col, ts_name, max_ele_change).cache()
 			diff_fixes = num_fixes - gps_data.count()
 			num_fixes = num_fixes - diff_fixes
 			elapsed_time = time.time() - start_time
-			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
-			print(pc.WARNING + "      {} fixes filtered out".format(str(diff_fixes)) + pc.ENDC)
+			print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+			print("      {} fixes filtered out".format(str(diff_fixes)))
 			print(" ")
 
-			print(pc.WARNING + " ===> apply three fixes filter..." + pc.ENDC)
+			print(" ===> apply three fixes filter...")
 			start_time = time.time()
 			gps_data = filter_change_dist_3_fixes(gps_data, dist_col, ts_name, min_change_3_fixes).cache()
 			diff_fixes = num_fixes - gps_data.count()
 			num_fixes = num_fixes - diff_fixes
 			elapsed_time = time.time() - start_time
-			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
-			print(pc.WARNING + "      {} fixes filtered out".format(str(diff_fixes)) + pc.ENDC)
+			print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+			print("      {} fixes filtered out".format(str(diff_fixes)))
 			print(" ")
 
-		print(pc.WARNING + " ===> align timestamps..." + pc.ENDC)
+		print(" ===> align timestamps...")
 		start_time = time.time()
 		gps_data = round_timestamp(gps_data, ts_name, interval).cache()
 		gps_data = gps_data.checkpoint()
 		diff_fixes = num_fixes - gps_data.count()
 		num_fixes = num_fixes - diff_fixes
 		elapsed_time = time.time() - start_time
-		print(pc.WARNING + "      time elapsed: {}".format(
-			time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
-		print(pc.WARNING + "      number of fixes after all filters applied: {}".format(str(num_fixes)) + pc.ENDC)
+		print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+		print("      number of fixes after all filters applied: {}".format(str(num_fixes)))
 		print(" ")
 
 		#gps_data = gps_data.limit(100) ######################################<<<<<<<<<<<<<<<
@@ -428,7 +424,7 @@ def main(gps_path, acc_path, config_file,
 		# Trip detection
 		if trip_detection:
 
-			print(pc.WARNING + " ===> detect trips..." + pc.ENDC)
+			print(" ===> detect trips...")
 			start_time = time.time()
 			## set 4 partitions (use this value only in local mode)
 			gps_data = detect_trips(gps_data, ts_name, dist_col, speed_col, fix_type_col, min_distance,
@@ -436,12 +432,12 @@ def main(gps_path, acc_path, config_file,
 			gps_data = gps_data.checkpoint()
 			gps_data.count()
 			elapsed_time = time.time() - start_time
-			print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+			print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
 			print(" ")
 
 			if detect_trip_mode:
 
-				print(pc.WARNING + " ===> classify trips..." + pc.ENDC)
+				print(" ===> classify trips...")
 				start_time = time.time()
 				gps_data = classify_trips(gps_data, ts_name, dist_col, speed_col,
 										 vehicle_cutoff, bicycle_cutoff, walk_cutoff,
@@ -450,7 +446,7 @@ def main(gps_path, acc_path, config_file,
 				gps_data = gps_data.checkpoint()
 				gps_data.count()
 				elapsed_time = time.time() - start_time
-				print(pc.WARNING + "      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
+				print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
 				print(" ")
 
 		# Insert missing data
@@ -462,16 +458,15 @@ def main(gps_path, acc_path, config_file,
 			else:
 				insert_max_seconds = los_max_duration
 
-			print(pc.WARNING + " ===> fill in missing values..." + pc.ENDC)
+			print(" ===> fill in missing values...")
 			start_time = time.time()
 			gps_data = fill_timestamp(gps_data, ts_name, fix_type_col, interval, insert_max_seconds).cache()
 			gps_data = gps_data.checkpoint()
 			diff_fixes = gps_data.count() - num_fixes
 			num_fixes = num_fixes + diff_fixes
 			elapsed_time = time.time() - start_time
-			print(pc.WARNING + "      time elapsed: {}".format(
-				time.strftime("%H:%M:%S", time.gmtime(elapsed_time))) + pc.ENDC)
-			print(pc.WARNING + "      number of fixes after inserts: {}".format(str(num_fixes)) + pc.ENDC)
+			print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+			print("      number of fixes after inserts: {}".format(str(num_fixes)))
 			print(" ")
 
 		gps_data = gps_data.withColumn('ID', F.lit(id)).orderBy(ts_name)
@@ -484,7 +479,7 @@ def main(gps_path, acc_path, config_file,
 
 		# Merge dataframes
 		if merge_data_to_gps:
-			print(pc.OKBLUE + pc.UNDERLINE + "merging accelerometer data to GPS data\n" + pc.ENDC)
+			print("merging accelerometer data to GPS data\n")
 
 			merged_data = gps_data.join(acc_data, ['ID', ts_name], how='left').orderBy(ts_name)
 
@@ -494,11 +489,11 @@ def main(gps_path, acc_path, config_file,
 
 			# Save combined dataframe
 			merged_data.toPandas().to_csv('HABITUS_output/' + output_filename + "_gps_acc_{}.csv".format(str(id)), index=False)
-			print(pc.WARNING + " ===> merged dataframe saved in: " + output_filename + "_gps_acc_{}.csv".format(str(id)) + pc.ENDC)
+			print(" ===> merged dataframe saved in: " + output_filename + "_gps_acc_{}.csv".format(str(id)))
 			print(" ")
 
 		if merge_data_to_acc:
-			print(pc.OKBLUE + pc.UNDERLINE + "merging GPS data to accelerometer data\n" + pc.ENDC)
+			print("merging GPS data to accelerometer data\n")
 			merged_data = acc_data.join(gps_data, ['ID', ts_name], how='left').orderBy(ts_name)
 
 			merged_data = merged_data.withColumn(fix_type_col, F.when(F.col(fix_type_col).isNotNull(),
@@ -526,17 +521,17 @@ def main(gps_path, acc_path, config_file,
 
 			# Save combined dataframe
 			merged_data.toPandas().to_csv('HABITUS_output/' + output_filename + "_acc_gps_{}.csv".format(str(id)), index=False)
-			print(pc.WARNING + " ===> merged dataframe saved in: " + output_filename + "_acc_gps_{}.csv".format(str(id)) + pc.ENDC)
+			print(" ===> merged dataframe saved in: " + output_filename + "_acc_gps_{}.csv".format(str(id)))
 			print(" ")
 
 		if not merge_data_to_acc and not merge_data_to_gps:
 			# Save processed GPS data
 			gps_data.toPandas().to_csv('HABITUS_output/' + file_gps[:-4] + '_habitus_gps.csv', index=False)
-			print(pc.WARNING + " ===> GPS data saved in: {}_habitus_gps.csv".format(file_gps[:-4]) + pc.ENDC)
+			print(" ===> GPS data saved in: {}_habitus_gps.csv".format(file_gps[:-4]))
 
 			# Save processed accelerometer data
 			acc_data.toPandas().to_csv('HABITUS_output/' + file_acc[:-4] + '_habitus_acc.csv', index=False)
-			print(pc.WARNING + " ===> accelerometer data saved in: {}_habitus_acc.csv".format(file_acc[:-4]) + pc.ENDC)
+			print(" ===> accelerometer data saved in: {}_habitus_acc.csv".format(file_acc[:-4]))
 			print(" ")
 
 		print(" ")
@@ -581,8 +576,7 @@ def main(gps_path, acc_path, config_file,
 							fout.write(line)
 
 	program_duration = time.time() - program_start
-	print(pc.OKGREEN + "Program completed in: {}".format(
-		time.strftime("%H:%M:%S", time.gmtime(program_duration))) + pc.ENDC)
+	print("Program completed in: {}".format(time.strftime("%H:%M:%S", time.gmtime(program_duration))))
 	print(" ")
 
 if __name__ == "__main__":
