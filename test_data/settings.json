@@ -3,7 +3,7 @@
 	"spark":
 	{
 		"driver":{
-			"memory": "64g"
+			"memory": "16g"
 		},
 		"executor":{
 			"memory": "16g"
