@@ -215,7 +215,7 @@ class Input:
         self.data['spark']['executor']['memory'] = executor_mem
         self.data['spark']['driver']['memory'] = driver_mem
         self.data['spark']['sql']['shuffle']['partitions'] = shuffle_partitions
-        self.data['spark']['default']['partitions'] = default_partitions
+        self.data['spark']['default']['parallelism'] = default_partitions
         self.data['spark']['memory']['offHeap']['enabled'] = mem_offHeap_enabled
         self.data['spark']['memory']['offHeap']['size'] = mem_offHeap_size
         self.data['spark']['cleaner']['referenceTracking']['cleanCheckpoints'] = clean_checkpoints
