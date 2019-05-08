@@ -149,6 +149,14 @@ def main(gps_path, acc_path, config_file,
 	# ('spark.driver.host', 'localhost') # TODO: allows to pass configs with spark-submit, without spark.conf file
 	# ('spark.ui.port', '3000')
 
+	"""
+	Note about 'spark.driver.memory': 
+	In client mode, this config must not be set through the SparkConf directly in your application, 
+	because the driver JVM has already started at that point (using spark-submit to run the application). 
+	Instead, please set this through the --driver-memory command line option or in your default properties file.
+	
+	"""
+
 	spark = SparkSession.builder.config(conf=conf).master("local[*]").appName("HABITUS").getOrCreate()
 	sc = spark.sparkContext
 	sc.setLogLevel("ERROR")
@@ -415,7 +423,7 @@ def main(gps_path, acc_path, config_file,
 		print(pc.WARNING + "      number of fixes after all filters applied: {}".format(str(num_fixes)) + pc.ENDC)
 		print(" ")
 
-		#gps_data = gps_data.limit(100) ######################################<<<<<<<<<<<<<<<
+		#gps_data = gps_data.limit(1000) ######################################<<<<<<<<<<<<<<<
 
 		# Trip detection
 		if trip_detection:
