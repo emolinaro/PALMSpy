@@ -2460,6 +2460,24 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                         0).otherwise(F.col('trip'))
                          ).orderBy(ts_name)
 
+    ## case of first fix followed by start trip
+    df2 = df2.withColumn('tripMOT', F.when((F.col('fixTypeCode') == 2) &
+                                           (F.col('trip') == 0) &
+                                           (F.lead('trip',1).over(Window.orderBy(ts_name)) == 1),
+                                           F.lead('tripMOT',1).over(Window.orderBy(ts_name))
+                                           ).otherwise(F.col('tripMOT'))
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('trip', F.when((F.col('fixTypeCode') == 2) &
+                                        (F.col('trip') == 0) &
+                                        (F.lead('trip',1).over(Window.orderBy(ts_name)) == 1),
+                                        1).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('trip', F.when((F.col('trip') == 1) &
+                                        (F.lag('trip').over(Window.orderBy(ts_name)) == 1) &
+                                        (F.lag('fixTypeCode',1).over(Window.orderBy(ts_name)) == 2),
+                                        2).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
     df2 = df2.drop(*['tmp', 'cum_dist', 'roundSpeed', 'pause', 'pause_dist', 'segment'])
 
     # compute trip number
@@ -2482,6 +2500,50 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                               (F.col('tripType') == 0),
                                               0).otherwise(F.col('tripNumber'))
                          ).orderBy(ts_name)
+
+    # sanity checks
+
+    ## reset trip number of isolated pause fixes
+    df2 = df2.withColumn('t1', F.when((F.col('tipType') == 3) &
+                                      (F.lag('tripType').over(Window.orderBy(ts_name)) == 0) &
+                                      (F.col('tripNumber') != 0),
+                                      0)
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('t1', F.when((F.col('tipType') == 3) &
+                                      (F.lead('tripType').over(Window.orderBy(ts_name)) == 0) &
+                                      (F.col('tripNumber') != 0),
+                                      0).otherwise(F.col('t1'))
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('t1', F.when((F.col('tipType') == 3) &
+                                      (F.lag('tripType').over(Window.orderBy(ts_name)) == 3) &
+                                      (F.lag('t1').over(Window.orderBy(ts_name)) == 0) &
+                                      (F.col('tripNumber') != 0),
+                                      1).otherwise(F.col('t1'))
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('t1', F.when((F.col('tipType') == 3) &
+                                      (F.lead('tripType').over(Window.orderBy(ts_name)) == 3) &
+                                      (F.lead('t1').over(Window.orderBy(ts_name)) == 0) &
+                                      (F.col('tripNumber') != 0),
+                                      1).otherwise(F.col('t1'))
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('t1', F.when(F.col('t1').isNull(),
+                                      F.last('t1', ignorenulls=True)
+                                       .over(Window.orderBy(ts_name)
+                                                   .rowsBetween(Window.unboundedPreceding, Window.unboundedFollowing))
+                                      ).otherwise(F.col('t1'))
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('tripNumber', F.when(F.col('t1') == 1,
+                                              0).otherwise(F.col('tripNumber'))
+                         ).drop('t1').orderBy(ts_name)
+
+    ## reset trip number of pause fixes isolated from above
+    df2 = df2.withColumn('t1', F.when((F.col('tipType') == 3) &
+                                      (F.lag('tripType').over(Window.orderBy(ts_name)) == 0) &
+                                      (F.col('tripNumber') != 0),
+                                      0)
+                         ).orderBy(ts_name)
+
+
 
     df2 = df2.select(ts_name, 'dow', 'lat', 'lon', 'fixTypeCode', 'tripNumber', 'tripType', 'tripMOT')
 
