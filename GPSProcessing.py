@@ -2415,7 +2415,7 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                            F.lag('tripMOT', 1).over(Window.orderBy(ts_name))
                                            ).otherwise(F.col('tripMOT'))
                          ).orderBy(ts_name)
-    """ """
+
     df2 = df2.withColumn('tripMOT', F.when(F.col('tripMOT').isNull(), 0).otherwise(F.col('tripMOT')))
     df2 = df2.withColumn('trip', F.when(F.col('trip').isNull(), F.col('tripType')).otherwise(F.col('trip')))
 
@@ -2425,6 +2425,40 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                         (F.col('tripMOT') == 0),
                                         0).otherwise(F.col('trip'))
                          )
+
+    # sanity checks
+
+    ## case of a single fix with tripType=3
+    df2 = df2.withColumn('tripMOT', F.when((F.col('trip') == 3) &
+                                           (F.lag('trip',1).over(Window.orderBy(ts_name)) == 2) &
+                                           (F.lead('trip',1).over(Window.orderBy(ts_name)) == 2),
+                                           F.lead('tripMOT',1).over(Window.orderBy(ts_name))
+                                          ).otherwise(F.col('tripMOT'))
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('trip', F.when((F.col('trip') == 3) &
+                                        (F.lag('trip',1).over(Window.orderBy(ts_name)) == 2) &
+                                        (F.lead('trip',1).over(Window.orderBy(ts_name)) == 2),
+                                        2).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+
+    ## case of a fix with tripType=0, followed by a fix with tripType=3 and preceded by a fix with tripType=2
+    df2.withColumn('trip', F.when((F.col('trip') == 0) &
+                                  (F.lag('trip',1).over(Window.orderBy(ts_name)) == 2) &
+                                  (F.lead('trip',1).over(Window.orderBy(ts_name)) == 3),
+                                  3).otherwise(F.col('trip'))
+                   )
+
+    ## case of last fix which is not the end of a trip
+    df2 = df2.withColumn('tripMOT', F.when((F.col('fixTypeCode') == 3) &
+                                           (F.col('trip') == 4) &
+                                           (F.lag('trip',1).over(Window.orderBy(ts_name)) == 0),
+                                           0).otherwise(F.col('tripMOT'))
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('trip', F.when((F.col('fixTypeCode') == 3) &
+                                        (F.col('trip') == 4) &
+                                        (F.lag('trip',1).over(Window.orderBy(ts_name)) == 0),
+                                        0).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
 
     df2 = df2.drop(*['tmp', 'cum_dist', 'roundSpeed', 'pause', 'pause_dist', 'segment'])
 
