@@ -2553,7 +2553,7 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
     df2 = df2.withColumn('t1', F.when((F.col('tripType') == 3) &
                                       (F.col('t1') == 0) &
                                       (F.lead('t1',1).over(Window.orderBy(ts_name)) == 1),
-                                      1).otherwise(ts_name)
+                                      1).otherwise(F.col('t1'))
                          ).orderBy(ts_name)
     df2 = df2.withColumn('t1', F.when((F.col('tripType') == 3) &
                                       (F.col('t1') == 0) &
@@ -2611,12 +2611,12 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                          ).orderBy(ts_name)
 
     ## reset trip number of pause fixes isolated from above
-    df2 = df2.withColumn('t1', F.when((F.col('tipType') == 3) &
+    df2 = df2.withColumn('t1', F.when((F.col('tripType') == 3) &
                                       (F.lag('tripType').over(Window.orderBy(ts_name)) == 0) &
                                       (F.col('tripNumber') != 0),
                                       0)
                          ).orderBy(ts_name)
-    df2 = df2.withColumn('t1', F.when((F.col('tipType') == 3) &
+    df2 = df2.withColumn('t1', F.when((F.col('tripType') == 3) &
                                       (F.lead('tripType').over(Window.orderBy(ts_name)) == 1) &
                                       (F.col('tripNumber') != 0),
                                       0).otherwise(F.col('t1'))
