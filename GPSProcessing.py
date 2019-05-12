@@ -1912,11 +1912,24 @@ def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per
                                             4).otherwise(F.col('tripType'))
                         ).orderBy(ts_name)
     
-    #'duration'
+    ## sanity checks
+    df2 = df2.withColumn('tripType', F.when((F.col('tripType') == 2) &
+                                            (F.lag('tripType',1).over(Window.orderBy(ts_name)) == 0),
+                                            1).otherwise(F.col('tripType'))
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('tripType', F.when((F.col('tripType') == 2) &
+                                            (F.lead('tripType',1).over(Window.orderBy(ts_name)) == 0),
+                                            4).otherwise(F.col('tripType'))
+                         ).orderBy(ts_name)
+
     df2 = df2.drop(*['state_cp','tripType_cp','total_sec','cum_dist_min',
                     'pause', 'pause_dist','i1','i2','i3','state','segment'])
 
     df1 = df1.join(df2, [ts_name, 'lat', 'lon', fix_type_name], how='left').orderBy(ts_name)
+
+    ## save dataframe on file
+    df1.coalesce(1).write.option("header", True).option("inferSchema", "true") \
+        .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_1.csv")
 
     return df1
 
@@ -2097,10 +2110,9 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
 
 
     """
-    w = Window.orderBy(ts_name).rowsBetween(0, Window.unboundedFollowing)
+
     w1 = Window.orderBy(ts_name).rowsBetween(Window.unboundedPreceding, 0)
     w2 = Window.partitionBy('segment').orderBy(ts_name)
-    w3 = Window.partitionBy('tripMOT').orderBy(ts_name)
 
     udf_round = F.udf(lambda x: floor(x + 0.5))  # floor(x+0.5) == Math.round(x) in JavaScript
 
@@ -2183,6 +2195,7 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
     df2 = trip_segmentation(df2, ts_name, speed_segment_length).checkpoint()
 
     # set trip mode
+
     # n_percentile = F.expr('percentile_approx(roundSpeed, {})'.format(str(speed_percentile*0.01)))
     n_percentile = F.expr('percentile(roundSpeed, {})'.format(str(speed_percentile * 0.01)))
 
@@ -2200,8 +2213,8 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
     df2 = df2.withColumn('tmp', F.when(F.col('segment').isNotNull() &
                                        F.col('tmp').isNull(),
                                        F.first('tmp', ignorenulls=True)
-                                       .over(Window.partitionBy('segment')
-                                             .rowsBetween(0, Window.unboundedFollowing)
+                                        .over(Window.partitionBy('segment')
+                                                    .rowsBetween(0, Window.unboundedFollowing)
                                              )
                                        ).otherwise(F.col('tmp'))
                          ).orderBy(ts_name)
@@ -2213,58 +2226,57 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
 
     df2 = df2.withColumn('tripMOT', F.when((F.col('tripType') == 3),
                                            None).otherwise(F.col('tripMOT'))
-                         ).orderBy(ts_name)
+                        ).orderBy(ts_name)
 
     df2 = df2.withColumn('tripMOT', F.when((F.col('tripType') == 3) &
                                            (F.col('trip') == 4),
-                                           F.lag('tripMOT', 1).over(Window.orderBy(ts_name))
-                                           ).otherwise(F.col('tripMOT'))
-                         ).orderBy(ts_name)
+                                           F.lag('tripMOT',1).over(Window.orderBy(ts_name))
+                                          ).otherwise(F.col('tripMOT'))
+                        ).orderBy(ts_name)
 
-    ## fix repetitions
+    # fix repetitions
+
     df2 = df2.withColumn('trip', F.when((F.col('tripType') == 3) &
                                         (F.col('trip') == 4) &
-                                        (F.lag('trip', 1).over(Window.orderBy(ts_name)) == 4),
+                                        (F.lag('trip',1).over(Window.orderBy(ts_name)) == 4),
                                         None
-                                        ).otherwise(F.col('trip'))
-                         ).orderBy(ts_name)
+                                       ).otherwise(F.col('trip'))
+                        ).orderBy(ts_name)
 
     df2 = df2.withColumn('tripMOT', F.when((F.col('tripType') == 3) &
                                            F.col('trip').isNull() &
                                            F.col('tripMOT').isNotNull(),
                                            None).otherwise(F.col('tripMOT'))
-                         )
+                        )
 
     df2 = df2.withColumn('trip', F.when((F.col('tripType') == 2) &
-                                        (F.lead('tripType', 1).over(Window.orderBy(ts_name)) == 0),
+                                        (F.lead('tripType',1).over(Window.orderBy(ts_name)) == 0),
                                         4).otherwise(F.col('trip'))
-                         ).orderBy(ts_name)
+                        ).orderBy(ts_name)
 
     df2 = df2.withColumn('tripMOT', F.when((F.col('trip') == 1) &
                                            (F.col('tripMOT') == 0),
-                                           F.lead('tripMOT', 1).over(Window.orderBy(ts_name))
-                                           ).otherwise(F.col('tripMOT'))
-                         ).orderBy(ts_name)
+                                           F.lead('tripMOT',1).over(Window.orderBy(ts_name))
+                                          ).otherwise(F.col('tripMOT'))
+                        ).orderBy(ts_name)
 
     df2 = df2.withColumn('trip', F.when((F.col('trip') == 1) &
-                                        (F.lag('trip', 1).over(Window.orderBy(ts_name)) == 1),
+                                        (F.lag('trip',1).over(Window.orderBy(ts_name)) == 1),
                                         F.col('tripType')
-                                        ).otherwise(F.col('trip'))
-                         ).orderBy(ts_name)
+                                       ).otherwise(F.col('trip'))
+                        ).orderBy(ts_name)
 
     df2 = df2.withColumn('trip', F.when((F.col('tripType') != 4) &
                                         (F.col('trip') == 4) &
-                                        (F.lead('trip', 1).over(Window.orderBy(ts_name)) == 4),
+                                        (F.lead('trip',1).over(Window.orderBy(ts_name)) == 4),
                                         F.col('tripType')
-                                        ).otherwise(F.col('trip'))
-                         ).orderBy(ts_name)
+                                       ).otherwise(F.col('trip'))
+                        ).orderBy(ts_name)
 
     df2 = df2.drop(*['segment', 'pause', 'pause_dist', 'tmp']).orderBy(ts_name)
 
-    # df2.select('timestamp','tripType','trip','tripMOT').show(20000,False)
-
     df3 = df2.select(ts_name, 'lat', 'lon', 'duration', 'distance', 'cum_pause', 'tripType', 'trip', 'tripMOT') \
-        .filter(F.col('tripType') != 0).orderBy(ts_name)
+             .filter(F.col('tripType') != 0).orderBy(ts_name)
 
     df2 = df2.drop(*['trip', 'tripMOT'])
 
@@ -2279,9 +2291,8 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                       ).otherwise(F.col('ch'))
                          ).orderBy(ts_name)
 
-    # df3.select('timestamp','tripType','trip','tripMOT','ch').show(10000,False)
-
     # merge adjacent segments with equal tripMOT
+
     w4 = Window.partitionBy('ch').orderBy(ts_name)
     df3 = df3.withColumn('trip', F.when((F.col('trip') == 4) &
                                         (F.lead('trip', 1).over(w4) == 1) &
@@ -2289,6 +2300,7 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                         F.col('tripType')
                                         ).otherwise(F.col('trip'))
                          ).orderBy(ts_name)
+
 
     df3 = df3.withColumn('trip', F.when((F.col('trip') == 1) &
                                         (F.lag('trip', 1).over(w4) == F.lag('tripType', 1).over(w4)) &
@@ -2298,9 +2310,11 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                          ).orderBy(ts_name)
 
     # trip segmentation
+
     df3 = trip_segmentation(df3, ts_name, speed_segment_length)
 
     # remove short trips
+
     df3 = df3.withColumn('cum_dist', F.sum(dist_name).over(w4.rowsBetween(Window.unboundedPreceding, 0))
                          ).orderBy(ts_name)
 
@@ -2312,7 +2326,7 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
 
     df3 = df3.withColumn('tmp', F.when(F.col('tmp').isNull(),
                                        F.last('tmp', ignorenulls=True)
-                                       .over(w2.rowsBetween(0, Window.unboundedFollowing))
+                                        .over(w2.rowsBetween(0, Window.unboundedFollowing))
                                        ).otherwise(F.col('tmp'))
                          ).orderBy(ts_name)
 
@@ -2323,7 +2337,7 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
 
     df3 = df3.withColumn('tmp2', F.when(F.col('tmp2').isNull(),
                                         F.last('tmp2', ignorenulls=True)
-                                        .over(w2.rowsBetween(Window.unboundedPreceding, 0))
+                                         .over(w2.rowsBetween(Window.unboundedPreceding,0))
                                         ).otherwise(F.col('tmp2'))
                          ).orderBy(ts_name)
 
@@ -2336,18 +2350,14 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
     df3 = df3.withColumn('tmp3', F.when(F.col('tmp3').isNull() &
                                         F.col('tmp2').isNotNull(),
                                         F.last('tmp3', ignorenulls=True)
-                                        .over(w2.rowsBetween(0, Window.unboundedFollowing))
+                                         .over(w2.rowsBetween(0, Window.unboundedFollowing))
                                         ).otherwise(F.col('tmp3'))
                          ).orderBy(ts_name)
 
     df3 = df3.withColumn('tmp', F.when(F.col('tmp2').isNotNull() &
                                        F.col('tmp3').isNotNull(),
                                        0).otherwise(F.col('tmp'))
-                         ).drop(*['tmp2', 'tmp3']).orderBy(ts_name)
-
-    # df3.select('timestamp','tripType','trip','tripMOT','tmp','ch').show(10000,False) ###########################
-    # df3.coalesce(1).write.option("header",True).option("inferSchema","true")\
-    #               .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_1.csv")
+                        ).drop(*['tmp2','tmp3']).orderBy(ts_name)
 
     ## reset short isolated trips
     df3 = df3.withColumn('trip', F.when(F.col('tmp') == 0, 0).otherwise(F.col('trip')))
@@ -2368,9 +2378,6 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
     df3 = df3.withColumn('tripMOT', F.when(F.col('tmp2') == 2, 0).otherwise(F.col('tripMOT')))
     df3 = df3.withColumn('tmp', F.when(F.col('tmp2') == 2, None).otherwise(F.col('tmp')))
     df3 = df3.drop('tmp2')
-
-    # df3.coalesce(1).write.option("header",True).option("inferSchema","true")\
-    #               .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_2.csv")
 
     ## merge short trip segments
     df3 = df3.withColumn('tripMOT', F.when(F.col('tmp') == 1, None).otherwise(F.col('tripMOT')))
@@ -2401,9 +2408,6 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                         ).otherwise(F.col('trip'))
                          )
 
-    # df3.coalesce(1).write.option("header",True).option("inferSchema","true")\
-    #               .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_3.csv")
-
     ## merge adjacent segments
     df3 = df3.withColumn('trip', F.when((F.col('trip') == 4) &
                                         (F.lead('trip', 1).over(w4) == 1) &
@@ -2419,31 +2423,25 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                         ).otherwise(F.col('trip'))
                          ).orderBy(ts_name)
 
-    # df3.select('timestamp','tripType','trip','tripMOT','ch').show(10000,False)
-
     # trip segmentation
     df3 = trip_segmentation(df3, ts_name, speed_segment_length)
     df3 = df3.drop('ch').orderBy(ts_name).cache()
 
-    # df3.coalesce(1).write.option("header",True).option("inferSchema","true")\
-    #               .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_4.csv")
-
-    # df3.select('timestamp','tripType','trip','tripMOT').show(10000,False)
-
     df2 = df2.join(df3, [ts_name, 'lat', 'lon', 'duration', 'distance', 'cum_pause',
                          'tripType'], how='left').orderBy(ts_name)
+
 
     df2 = df2.withColumn('tripMOT', F.when((F.col('tripType') == 3) &
                                            (F.col('trip') != 4),
                                            0).otherwise(F.col('tripMOT'))
-                         )
+                        )
 
     df2 = df2.withColumn('tripMOT', F.when((F.col('tripType') == 3) &
                                            (F.col('trip') == 4),
-                                           F.lag('tripMOT', 1).over(Window.orderBy(ts_name))
-                                           ).otherwise(F.col('tripMOT'))
-                         ).orderBy(ts_name)
-    """ """
+                                           F.lag('tripMOT',1).over(Window.orderBy(ts_name))
+                                          ).otherwise(F.col('tripMOT'))
+                        ).orderBy(ts_name)
+
     df2 = df2.withColumn('tripMOT', F.when(F.col('tripMOT').isNull(), 0).otherwise(F.col('tripMOT')))
     df2 = df2.withColumn('trip', F.when(F.col('trip').isNull(), F.col('tripType')).otherwise(F.col('trip')))
 
@@ -2453,15 +2451,22 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                         (F.col('tripMOT') == 0),
                                         0).otherwise(F.col('trip'))
                          )
-    df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
-        .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_5a.csv")
-
-    """"""
-
-    # gps_data_path = '/Users/molinaro/Documents/GITHUB/HABITUS/partial_5a.csv/part-00000-80943cd6-b7d3-427f-84b1-7988cb76cb55-c000.csv'
-    # df2 = spark.read.csv(gps_data_path, header=True, inferSchema=True)
+    df2.coalesce(1).write.option("header",True).option("inferSchema","true")\
+                   .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_5a.csv")
 
     # sanity checks
+
+    ## set beginning and end of a trip when there is a change of tripMOT
+    df2 = df2.withColumn('trip', F.when((F.col('trip') == 2) &
+                                        (F.lead('trip', 1).over(Window.orderBy(ts_name)) == 2) &
+                                        (F.col('tripMOT') != F.lead('tripMOT', 1).over(Window.orderBy(ts_name))),
+                                        4).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('trip', F.when((F.col('trip') == 2) &
+                                        (F.lag('trip', 1).over(Window.orderBy(ts_name)) == 4) &
+                                        (F.col('tripMOT') != F.lag('tripMOT', 1).over(Window.orderBy(ts_name))),
+                                        1).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
 
     ## case of a single fix with tripType=3
     df2 = df2.withColumn('tripMOT', F.when((F.col('trip') == 3) &
@@ -2476,24 +2481,12 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                         2).otherwise(F.col('trip'))
                          ).orderBy(ts_name)
 
-    try:
-        df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
-            .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_5b.csv")
-    except:
-        pass
-
     ## case of a fix with tripType=0, followed by a fix with tripType=3 and preceded by a fix with tripType=2
-    df2.withColumn('trip', F.when((F.col('trip') == 0) &
-                                  (F.lag('trip', 1).over(Window.orderBy(ts_name)) == 2) &
-                                  (F.lead('trip', 1).over(Window.orderBy(ts_name)) == 3),
-                                  3).otherwise(F.col('trip'))
-                   )
-
-    try:
-        df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
-            .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_5c.csv")
-    except:
-        pass
+    df2 = df2.withColumn('trip', F.when((F.col('trip') == 0) &
+                                        (F.lag('trip', 1).over(Window.orderBy(ts_name)) == 2) &
+                                        (F.lead('trip', 1).over(Window.orderBy(ts_name)) == 3),
+                                        3).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
 
     ## case of last fix which is not the end of a trip
     df2 = df2.withColumn('tripMOT', F.when((F.col('fixTypeCode') == 3) &
@@ -2506,12 +2499,6 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                         (F.lag('trip', 1).over(Window.orderBy(ts_name)) == 0),
                                         0).otherwise(F.col('trip'))
                          ).orderBy(ts_name)
-
-    try:
-        df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
-            .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_5d.csv")
-    except:
-        pass
 
     ## case of first fix followed by start trip
     df2 = df2.withColumn('tripMOT', F.when((F.col('fixTypeCode') == 2) &
@@ -2531,11 +2518,11 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                         2).otherwise(F.col('trip'))
                          ).orderBy(ts_name)
 
-    try:
-        df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
-            .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_5e.csv")
-    except:
-        pass
+    ## case of tripType=2 followed by tripType=0
+    df2 = df2.withColumn('trip', F.when((F.col('trip') == 2) &
+                                        (F.lead('trip', 1).over(Window.orderBy(ts_name)) == 0),
+                                        4).otherwise(F.col('trip'))
+                         ).orderBy(ts_name)
 
     df2 = df2.drop(*['tmp', 'cum_dist', 'roundSpeed', 'pause', 'pause_dist', 'segment'])
 
@@ -2553,24 +2540,12 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
     df2 = df2.withColumn('tripNumber', F.when(F.col('tripType') == 0, 0).otherwise(F.col('tripNumber')))
     df2 = df2.withColumn('tripNumber', F.when(F.col('tripNumber').isNull(), 0).otherwise(F.col('tripNumber')))
 
-    try:
-        df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
-            .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_5f.csv")
-    except:
-        pass
-
     # reset tripType and tripNumber
     df2 = df2.withColumn('tripType', F.col('trip')).orderBy(ts_name)
     df2 = df2.withColumn('tripNumber', F.when((F.col('tripMOT') == 0) &
                                               (F.col('tripType') == 0),
                                               0).otherwise(F.col('tripNumber'))
                          ).orderBy(ts_name)
-
-    try:
-        df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
-            .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_5g.csv")
-    except:
-        pass
 
     # sanity checks
 
@@ -2611,11 +2586,12 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                             .rowsBetween(Window.unboundedPreceding, 0))
                                       ).otherwise(F.col('t1'))
                          ).orderBy(ts_name)
-    try:
-        df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
-            .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("tmp.csv")
-    except:
-        pass
+
+    df2 = df2.withColumn('t1', F.when((F.col('t1') == 1) &
+                                      (F.lag('t1', 1).over(Window.orderBy(ts_name)) == 0) &
+                                      (F.lead('t1', 1).over(Window.orderBy(ts_name)) == 0),
+                                      0).otherwise(F.col('t1'))
+                         ).orderBy(ts_name)
     df2 = df2.withColumn('t1', F.when((F.col('tripType') == 3) &
                                       (F.col('t1') == 0) &
                                       (F.lead('t1', 1).over(Window.orderBy(ts_name)) == 1),
@@ -2626,17 +2602,10 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                       (F.lag('t1', 1).over(Window.orderBy(ts_name)) == 1),
                                       1).otherwise(F.col('t1'))
                          ).orderBy(ts_name)
-
     df2 = df2.withColumn('tripNumber', F.when((F.col('t1') == 1) &
                                               (F.col('tripType') == 3),
                                               0).otherwise(F.col('tripNumber'))
                          ).drop('t1').orderBy(ts_name)
-
-    try:
-        df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
-            .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_5h.csv")
-    except:
-        pass
 
     ## reset trip number of pause fixes between end trip and start trip
     df2 = df2.withColumn('t2', F.when((F.col('tripType') == 3) &
@@ -2665,7 +2634,7 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                       F.col('t2').isNull(),
                                       F.last('t2', ignorenulls=True)
                                       .over(Window.orderBy(ts_name)
-                                            .rowsBetween(0, Window.unboundedPreceding))
+                                            .rowsBetween(Window.unboundedPreceding, 0))
                                       ).otherwise(F.col('t2'))
                          ).orderBy(ts_name)
     df2 = df2.withColumn('t2', F.when((F.col('tripType') == 3) &
@@ -2682,12 +2651,6 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                               (F.col('tripType') == 3),
                                               0).otherwise(F.col('tripNumber'))
                          ).orderBy(ts_name)
-
-    try:
-        df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
-            .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_5i.csv")
-    except:
-        pass
 
     ## reset trip number of pause fixes isolated from above
     df2 = df2.withColumn('t1', F.when((F.col('tripType') == 3) &
@@ -2716,7 +2679,7 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                       F.col('t1').isNull(),
                                       F.last('t1', ignorenulls=True)
                                       .over(Window.orderBy(F.col('t1'))
-                                            .rowsBetween(0, Window.unboundedPreceding))
+                                            .rowsBetween(Window.unboundedPreceding, 0))
                                       ).otherwise(F.col('t1'))
                          ).orderBy(ts_name)
     df2 = df2.withColumn('tripNumber', F.when((F.col('t1') == 1) &
@@ -2725,19 +2688,48 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                               0).otherwise(F.col('tripNumber'))
                          ).drop(*['t1', 't2']).orderBy(ts_name)
 
-    try:
-        df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
-            .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_5j.csv")
-    except:
-        pass
-
+    ## reset trip without endpoint before a pause fix
+    df2 = df2.withColumn('tmp', F.when((F.col('tripType') == 2) &
+                                       (F.lead('tripType', 1).over(Window.orderBy(ts_name)) == 3) &
+                                       (F.lead('tripNumber', 1).over(Window.orderBy(ts_name)) == 0),
+                                       1)
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('tmp', F.when(F.col('tmp').isNull(),
+                                       F.last('tmp', ignorenulls=True)
+                                       .over(Window.partitionBy('tripNumber')
+                                             .orderBy(ts_name).rowsBetween(0, Window.unboundedFollowing)
+                                             )
+                                       ).otherwise(F.col('tmp'))
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('tripType', F.when(F.col('tmp').isNotNull(),
+                                            0).otherwise(F.col('trip'))
+                         )
+    df2 = df2.withColumn('tripMOT', F.when(F.col('tmp').isNotNull(),
+                                           0).otherwise(F.col('tripMOT'))
+                         )
+    df2 = df2.withColumn('tripNumber', F.when(F.col('tmp').isNotNull(),
+                                              0).otherwise(F.col('tripNumber'))
+                         ).drop('tmp').orderBy(ts_name)
+    """
+    ## recompute trip number
+    df2 = df2.withColumn('tripNumber', F.when(F.col('tripType') == 1, F.monotonically_increasing_id()))
+    df2 = df2.withColumn('tripNumber', F.when(F.col('tripNumber').isNull() &
+                                              F.col('tripType').isNotNull(),
+                                              F.last('tripNumber', ignorenulls=True).over(w1)
+                                              ).otherwise(F.col('tripNumber'))
+                         ).orderBy(ts_name)
+    df2 = df2.withColumn('tripNumber', F.when(F.col('tripNumber').isNotNull(),
+                                              F.col('tripNumber') + F.lit(1)
+                                              ).otherwise(F.col('tripNumber'))
+                         )
+    df2 = df2.withColumn('tripNumber', F.when(F.col('tripType') == 0, 0).otherwise(F.col('tripNumber')))
+    df2 = df2.withColumn('tripNumber', F.when(F.col('tripNumber').isNull(), 0).otherwise(F.col('tripNumber')))
+    """
     df2 = df2.select(ts_name, 'dow', 'lat', 'lon', 'fixTypeCode', 'tripNumber', 'tripType', 'tripMOT')
 
-    try:
-        df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
-            .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_5k.csv")
-    except:
-        pass
+    ## save results
+    df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
+                   .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_2.csv")
 
     return df2
 
