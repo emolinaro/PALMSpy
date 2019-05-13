@@ -2451,8 +2451,6 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                                         (F.col('tripMOT') == 0),
                                         0).otherwise(F.col('trip'))
                          )
-    df2.coalesce(1).write.option("header",True).option("inferSchema","true")\
-                   .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_5a.csv")
 
     # sanity checks
 
