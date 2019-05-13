@@ -450,7 +450,7 @@ def fill_timestamp(df, ts_name, fix_type_name, interval, ws):
                                             (F.lag('tripType', 1).over(Window.orderBy(ts_name)) == 0),
                                             1).otherwise(F.col('tripType'))
                          ).orderBy(ts_name)
-    
+
     return ref
 
 ##########################################################################################################
