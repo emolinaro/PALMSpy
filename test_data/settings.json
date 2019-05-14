@@ -35,7 +35,10 @@
 		},
 		"default":{
 			"parallelism": "20"
-		}
+		},
+        "default":{
+            "cores": "8"
+        }
 	},
 
 	"gps":
