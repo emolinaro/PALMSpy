@@ -1,6 +1,13 @@
 CHANGELOG FILE
 ===============
 
+2019-05-14 Emiliano Molinaro <emil.molinaro@gmail.com>
+
+    * Version 1.8
+
+    * habitus.py: set 'spark.ui.showConsoleProgress' to 'false' to remove stages from the console
+
+    * GPSProcessing.py (classify_trips): removed and segments corresponding to PAUSE fixes
 
 2019-05-12 Emiliano Molinaro <emil.molinaro@gmail.com>
 

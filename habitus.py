@@ -144,7 +144,8 @@ def main(gps_path, acc_path, config_file,
 							   ('spark.sql.broadcastTimeout', settings['spark']['sql']['broadcastTimeout']),
 							   ('spark.network.timeout', settings['spark']['network']['timeout']),
 							   ('spark.sql.codegen.fallback', settings['spark']['sql']['codegen']['fallback']),
-							   ('spark.default.parallelism', settings['spark']['default']['parallelism'])
+							   ('spark.default.parallelism', settings['spark']['default']['parallelism']),
+							   ('spark.ui.showConsoleProgress', 'false')
 							   ]
 							  )
 	# ('spark.driver.host', 'localhost') # TODO: allows to pass configs with spark-submit, without spark.conf file
