@@ -1955,9 +1955,11 @@ def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per
 
     df1 = df1.join(df2, [ts_name, 'lat', 'lon', fix_type_name], how='left').orderBy(ts_name)
 
+    """
     ## save dataframe on file
     df1.coalesce(1).write.option("header", True).option("inferSchema", "true") \
         .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_1.csv")
+    """
 
     return df1
 
@@ -2753,10 +2755,11 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
     """
     df2 = df2.select(ts_name, 'dow', 'lat', 'lon', 'fixTypeCode', 'tripNumber', 'tripType', 'tripMOT')
 
+    """
     ## save results
     df2.coalesce(1).write.option("header", True).option("inferSchema", "true") \
                    .option("timestampFormat", "yyyy-MM-dd HH:mm:ss").csv("partial_2.csv")
-
+    """
     return df2
 
 ##########################################################################################################
