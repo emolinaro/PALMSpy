@@ -400,6 +400,14 @@ mergeargs.add_argument(
 
 # Spark options
 sparkargs.add_argument(
+	"--num-cores",
+	type=str,
+	metavar='INT',
+	dest="num_cores",
+	default = 8,
+	help="total number of cores used in the calculation"
+)
+sparkargs.add_argument(
 	"--driver-mem",
 	type=str,
 	metavar='STR',

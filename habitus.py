@@ -74,7 +74,7 @@ def main(gps_path, acc_path, config_file,
          sedentary_bout_upper_limit, sedentary_bout_tolerance,
          very_hard_cutoff, hard_cutoff, moderate_cutoff, light_cutoff,
          merge_data_to_gps, merge_data_to_acc,
-         driver_mem, executor_mem, mem_fraction, default_partitions, shuffle_partitions, mem_offHeap_enabled,
+         num_cores, driver_mem, executor_mem, mem_fraction, default_partitions, shuffle_partitions, mem_offHeap_enabled,
          mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
          broadcast_timeout, network_timeout):
 
@@ -115,7 +115,7 @@ def main(gps_path, acc_path, config_file,
 		 sedentary_bout_upper_limit, sedentary_bout_tolerance,
 		 very_hard_cutoff, hard_cutoff, moderate_cutoff, light_cutoff,
 		 merge_data_to_gps, merge_data_to_acc,
-		 driver_mem, executor_mem, mem_fraction, default_partitions, shuffle_partitions, mem_offHeap_enabled,
+		 num_cores, driver_mem, executor_mem, mem_fraction, default_partitions, shuffle_partitions, mem_offHeap_enabled,
 		 mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
 		 broadcast_timeout, network_timeout)
 	settings = params.dump_dict()
@@ -159,7 +159,8 @@ def main(gps_path, acc_path, config_file,
 	
 	"""
 
-	spark = SparkSession.builder.config(conf=conf).master("local[*]").appName("HABITUS").getOrCreate()
+	mode = "local[" + str(num_cores) + "]"
+	spark = SparkSession.builder.config(conf=conf).master(mode).appName("HABITUS").getOrCreate()
 	sc = spark.sparkContext
 	sc.setLogLevel("ERROR")
 	sc.setCheckpointDir('checkpoints')
@@ -169,6 +170,7 @@ def main(gps_path, acc_path, config_file,
 
 	header()
 
+	print("Maximum number of cores used in the calculation: {}\n".format(str(num_cores)))
 	print("Default number of partitions: {}".format(str(default_partitions)))
 
 	# List accelerometer and GPS data files have the same name

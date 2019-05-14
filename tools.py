@@ -10,7 +10,7 @@ class PColors:
 
 class Metadata:
     name = 'HABITUS'
-    version = '1.8'
+    version = '1.9'
     mantainer = 'Emiliano Molinaro'
     email = 'emil.molinaro@gmail.com'
     authors = 'Emiliano Molinaro'
@@ -57,6 +57,9 @@ class Input:
                             },
                             "default":{
                                  "parallelism": "20"
+                            },
+                            "default":{
+                                "cores": "8"
                             }
                         },
 
@@ -157,7 +160,7 @@ class Input:
          sedentary_bout_upper_limit, sedentary_bout_tolerance,
          very_hard_cutoff, hard_cutoff, moderate_cutoff, light_cutoff,
          merge_data_to_gps, merge_data_to_acc,
-         driver_mem, executor_mem, mem_fraction, default_partitions, shuffle_partitions, mem_offHeap_enabled,
+         num_cores, driver_mem, executor_mem, mem_fraction, default_partitions, shuffle_partitions, mem_offHeap_enabled,
          mem_offHeap_size, clean_checkpoints, codegen_wholeStage, codegen_fallback,
          broadcast_timeout, network_timeout):
         
@@ -216,6 +219,7 @@ class Input:
         self.data['spark']['driver']['memory'] = driver_mem
         self.data['spark']['sql']['shuffle']['partitions'] = shuffle_partitions
         self.data['spark']['default']['parallelism'] = default_partitions
+        self.data['spark']['default']['cores'] = num_cores
         self.data['spark']['memory']['offHeap']['enabled'] = mem_offHeap_enabled
         self.data['spark']['memory']['offHeap']['size'] = mem_offHeap_size
         self.data['spark']['cleaner']['referenceTracking']['cleanCheckpoints'] = clean_checkpoints
