@@ -405,51 +405,55 @@ def fill_timestamp(df, ts_name, fix_type_name, interval, ws):
                         )
     ref = ref.drop('total_sec').dropna().orderBy(ts_name)
 
-    # Sanity checks
-    ref = ref.withColumn('tripNumber', F.when(F.col(fix_type_name) == 4, 0).otherwise(F.col('tripNumber')))
-    ref = ref.withColumn('tripType', F.when(F.col(fix_type_name) == 4, 0).otherwise(F.col('tripType')))
-    ref = ref.withColumn('tripMOT', F.when(F.col(fix_type_name) == 4, 0).otherwise(F.col('tripMOT')))
+    try:
+        # Sanity checks
+        ref = ref.withColumn('tripNumber', F.when(F.col(fix_type_name) == 4, 0).otherwise(F.col('tripNumber')))
+        ref = ref.withColumn('tripType', F.when(F.col(fix_type_name) == 4, 0).otherwise(F.col('tripType')))
+        ref = ref.withColumn('tripMOT', F.when(F.col(fix_type_name) == 4, 0).otherwise(F.col('tripMOT')))
 
-    ref = ref.withColumn('tripNumber', F.when((F.col(fix_type_name) == 6) &
-                                              (F.col('tripType') == 4),
-                                              0).otherwise(F.col('tripNumber'))
-                         )
-    ref = ref.withColumn('tripMOT', F.when((F.col(fix_type_name) == 6) &
-                                              (F.col('tripType') == 4),
-                                           0).otherwise(F.col('tripMOT'))
-                         )
-    ref = ref.withColumn('tripType', F.when((F.col(fix_type_name) == 6) &
-                                              (F.col('tripType') == 4),
-                                            0).otherwise(F.col('tripType'))
-                         )
-    ref =ref.withColumn('tripNumber', F.when((F.col(fix_type_name) == 6) &
-                                             (F.col('tripType') == 1),
-                                             0).otherwise(F.col('tripNumber'))
-                        ).orderBy(ts_name)
-    ref = ref.withColumn('tripMOT', F.when((F.col(fix_type_name) == 6) &
-                                           (F.col('tripType') == 1),
-                                           0).otherwise(F.col('tripMOT'))
-                         ).orderBy(ts_name)
-    ref = ref.withColumn('tripType', F.when((F.col(fix_type_name) == 6) &
-                                            (F.col('tripType') == 1),
-                                            0).otherwise(F.col('tripType'))
-                         ).orderBy(ts_name)
-    ref = ref.withColumn('tripNumber', F.when((F.col('tripType') == 1) &
-                                              (F.lead('tripType',1).over(Window.orderBy(ts_name)) == 0),
-                                            0).otherwise(F.col('tripNumber'))
-                         ).orderBy(ts_name)
-    ref = ref.withColumn('tripMOT', F.when((F.col('tripType') == 1) &
-                                           (F.lead('tripType', 1).over(Window.orderBy(ts_name)) == 0),
-                                           0).otherwise(F.col('tripMOT'))
-                         ).orderBy(ts_name)
-    ref = ref.withColumn('tripType', F.when((F.col('tripType') == 1) &
-                                           (F.lead('tripType', 1).over(Window.orderBy(ts_name)) == 0),
-                                           0).otherwise(F.col('tripType'))
-                         ).orderBy(ts_name)
-    ref = ref.withColumn('tripType', F.when((F.col('tripType') == 2) &
-                                            (F.lag('tripType', 1).over(Window.orderBy(ts_name)) == 0),
-                                            1).otherwise(F.col('tripType'))
-                         ).orderBy(ts_name)
+        ref = ref.withColumn('tripNumber', F.when((F.col(fix_type_name) == 6) &
+                                                  (F.col('tripType') == 4),
+                                                  0).otherwise(F.col('tripNumber'))
+                             )
+        ref = ref.withColumn('tripMOT', F.when((F.col(fix_type_name) == 6) &
+                                                  (F.col('tripType') == 4),
+                                               0).otherwise(F.col('tripMOT'))
+                             )
+        ref = ref.withColumn('tripType', F.when((F.col(fix_type_name) == 6) &
+                                                  (F.col('tripType') == 4),
+                                                0).otherwise(F.col('tripType'))
+                             )
+        ref =ref.withColumn('tripNumber', F.when((F.col(fix_type_name) == 6) &
+                                                 (F.col('tripType') == 1),
+                                                 0).otherwise(F.col('tripNumber'))
+                            ).orderBy(ts_name)
+        ref = ref.withColumn('tripMOT', F.when((F.col(fix_type_name) == 6) &
+                                               (F.col('tripType') == 1),
+                                               0).otherwise(F.col('tripMOT'))
+                             ).orderBy(ts_name)
+        ref = ref.withColumn('tripType', F.when((F.col(fix_type_name) == 6) &
+                                                (F.col('tripType') == 1),
+                                                0).otherwise(F.col('tripType'))
+                             ).orderBy(ts_name)
+        ref = ref.withColumn('tripNumber', F.when((F.col('tripType') == 1) &
+                                                  (F.lead('tripType',1).over(Window.orderBy(ts_name)) == 0),
+                                                0).otherwise(F.col('tripNumber'))
+                             ).orderBy(ts_name)
+        ref = ref.withColumn('tripMOT', F.when((F.col('tripType') == 1) &
+                                               (F.lead('tripType', 1).over(Window.orderBy(ts_name)) == 0),
+                                               0).otherwise(F.col('tripMOT'))
+                             ).orderBy(ts_name)
+        ref = ref.withColumn('tripType', F.when((F.col('tripType') == 1) &
+                                               (F.lead('tripType', 1).over(Window.orderBy(ts_name)) == 0),
+                                               0).otherwise(F.col('tripType'))
+                             ).orderBy(ts_name)
+        ref = ref.withColumn('tripType', F.when((F.col('tripType') == 2) &
+                                                (F.lag('tripType', 1).over(Window.orderBy(ts_name)) == 0),
+                                                1).otherwise(F.col('tripType'))
+                             ).orderBy(ts_name)
+
+    except:
+        return ref
 
     return ref
 

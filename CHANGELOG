@@ -1,6 +1,15 @@
 CHANGELOG FILE
 ===============
 
+2019-05-20 Emiliano Molinaro <emil.molinaro@gmail.com>
+
+    * Version 1.9.1
+
+    * GPSProcessing.py (fill_timestamp): add exception in case trip detection is not computed
+
+    * tools.py: fixed double "default" kwy in the config file
+
+
 2019-05-14 Emiliano Molinaro <emil.molinaro@gmail.com>
 
     * Version 1.9

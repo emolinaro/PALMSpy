@@ -10,7 +10,7 @@ class PColors:
 
 class Metadata:
     name = 'HABITUS'
-    version = '1.9'
+    version = '1.9.1'
     mantainer = 'Emiliano Molinaro'
     email = 'emil.molinaro@gmail.com'
     authors = 'Emiliano Molinaro'
@@ -56,10 +56,8 @@ class Input:
                                 "timeout": "800"
                             },
                             "default":{
-                                 "parallelism": "20"
-                            },
-                            "default":{
-                                "cores": "8"
+                                 "parallelism": "20",
+                                 "cores": "8"
                             }
                         },
 
