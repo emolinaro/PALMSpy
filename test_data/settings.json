@@ -34,11 +34,9 @@
 			"timeout": "800s"
 		},
 		"default":{
-			"parallelism": "20"
-		},
-        "default":{
+			"parallelism": "20",
             "cores": "8"
-        }
+		}
 	},
 
 	"gps":
