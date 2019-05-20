@@ -56,10 +56,8 @@ class Input:
                                 "timeout": "800"
                             },
                             "default":{
-                                 "parallelism": "20"
-                            },
-                            "default":{
-                                "cores": "8"
+                                 "parallelism": "20",
+                                 "cores": "8"
                             }
                         },
 
