@@ -242,7 +242,7 @@ accargs.add_argument(
 	"--include-acc",
 	dest="include_acc",
 	action='store_true',
-	help="append all accelerometer data to the final output"
+	help="append raw accelerometer data to the final output"
 )
 
 accargs.add_argument(
