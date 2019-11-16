@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
-# example: VERSION=1.0 ./build_image
+# example: VERSION=1.0 DATE=16.11.2019 ./build_image
 
 SOFTWARE=habitus
 
 rm -f Dockefile
 cp Dockerfile.template Dockerfile
 sed -i -e "s/<VER>/$VERSION/g" Dockerfile
+sed -i -e "s/<DATE>/$DATE/g" Dockerfile
 rm -f Dockerfile-e
 
 
