@@ -1,8 +1,0 @@
-pandas 
-numpy
-pytz 
-pyzmq 
-regex
-tzwhere 
-Datetime 
-datefinder

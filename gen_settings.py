@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import json
-from tools import Input
+from src.tools import Input
 import argparse
 
 

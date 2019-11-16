@@ -1,5 +1,5 @@
 import argparse
-from tools import Metadata
+from src.tools import Metadata
 
 meta = Metadata()
 VER = meta.version

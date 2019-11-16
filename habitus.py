@@ -29,17 +29,17 @@ SOFTWARE.
 from pyspark.conf import SparkConf
 import textwrap
 import json
-from tools import Input, Metadata
-import os, sys
+import sys, os
+
+from src.tools import Input, Metadata
 import shutil
 import glob
 
-from help_menu import parser
-from GPSProcessing import *
-from AccProcessing import *
+from src.help_menu import parser
+from src.GPSProcessing import *
+from src.AccProcessing import *
 
 meta = Metadata()
-
 
 def header():
     version = meta.version

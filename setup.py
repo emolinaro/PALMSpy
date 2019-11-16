@@ -1,5 +1,6 @@
 import setuptools
-from tools import Metadata
+
+from src.tools import Metadata
 
 meta = Metadata()
 
@@ -10,7 +11,7 @@ setuptools.setup(
      name='habitus',
      version=meta.version,
      scripts=['habitus.py','habitus'],
-     py_modules=['help_menu','gen_settings','GPSProcessing','AccProcessing','tools'],
+     py_modules=['src.__init__','src.help_menu','src.GPSProcessing','src.AccProcessing','src.tools'],
      author=meta.authors,
      author_email=meta.email,
      description=meta.description,
