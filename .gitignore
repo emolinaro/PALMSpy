@@ -3,8 +3,8 @@
 data/
 .idea
 .ipynb_checkpoints/
-checkpoint
 build/
 dist/
 checkpoints/
+HABITUS_output/
 *.egg-info/
