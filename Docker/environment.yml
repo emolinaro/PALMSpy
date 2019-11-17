@@ -12,3 +12,4 @@ dependencies:
     - tzwhere==3.0.3
     - datefinder==0.7.0
     - DateTime==4.3
+    - habitus-1.9.2-py3-none-any.whl
