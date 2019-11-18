@@ -3,6 +3,19 @@ CHANGELOG FILE
 
 2019-05-20 Emiliano Molinaro <emil.molinaro@gmail.com>
 
+    * Version 1.9.2
+
+    * Project folder restructured
+
+    * habitus.py: correct bug in 'merge_data_to_acc' (line 513), due to wrong default assignment of columns 'fixTypeCode', 'tripNumber', 'tripType'
+
+    * habitus.py: correct bug (lines 133-134), due to wrong initialization of variables 'num_cores' and 'default_partitions' via configuration file
+
+    * experimental: modified options of Spark ContextCleaner ('referenceTracking.blocking' and 'periodicGC.interval'); see commit 9f2bc for more info
+
+
+2019-05-20 Emiliano Molinaro <emil.molinaro@gmail.com>
+
     * Version 1.9.1
 
     * GPSProcessing.py (fill_timestamp): add exception in case trip detection is not computed
