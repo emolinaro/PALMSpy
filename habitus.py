@@ -41,6 +41,7 @@ from src.AccProcessing import *
 
 meta = Metadata()
 
+
 def header():
     version = meta.version
     program = meta.name
@@ -147,7 +148,9 @@ def main(gps_path, acc_path, config_file,
                                ('spark.network.timeout', settings['spark']['network']['timeout']),
                                ('spark.sql.codegen.fallback', settings['spark']['sql']['codegen']['fallback']),
                                ('spark.default.parallelism', settings['spark']['default']['parallelism']),
-                               ('spark.ui.showConsoleProgress', 'false')
+                               ('spark.ui.showConsoleProgress', 'false'),
+                               ('spark.cleaner.referenceTracking.blocking', 'false'),
+                               ('spark.cleaner.periodicGC.interval', '3min')
                                ]
                               )
     ## ('spark.driver.host', 'localhost') # TODO: allows to pass configs with spark-submit, without spark.conf file
@@ -289,7 +292,6 @@ def main(gps_path, acc_path, config_file,
         print(" ")
 
         if mark_not_wearing_time:
-
             print(" ===> determine non-wearing period...")
             start_time = time.time()
             acc_data = non_wear_filter(acc_data, ts_name, AC_name, AI_name, interval, minutes_zeros_row).cache()
@@ -299,7 +301,6 @@ def main(gps_path, acc_path, config_file,
             print(" ")
 
         if detect_activity_bouts:
-
             print(" ===> detect activity bouts...")
             acc_data = activity_bout_filter(acc_data, ts_name, AC_name, 'activityBoutNumber', interval,
                                             activity_bout_upper_limit, activity_bout_lower_limit,
@@ -309,7 +310,6 @@ def main(gps_path, acc_path, config_file,
             print(" ")
 
         if detect_sedentary_bouts:
-
             print(" ===> detect sedentary bouts...")
             acc_data = sedentary_bout_filter(acc_data, ts_name, AC_name, 'sedentaryBoutNumber', interval,
                                              sedentary_bout_upper_limit, 0,
@@ -382,7 +382,6 @@ def main(gps_path, acc_path, config_file,
 
         ## Apply filters
         if filter_invalid_values:
-
             print(" ===> apply velocity filter...")
             start_time = time.time()
             gps_data = filter_speed(gps_data, speed_col, max_speed).cache()
@@ -495,7 +494,6 @@ def main(gps_path, acc_path, config_file,
 
         ## Merge dataframes
         if merge_data_to_gps:
-
             print("merging accelerometer data to GPS data\n")
 
             merged_data = gps_data.join(acc_data, ['ID', ts_name], how='left').orderBy(ts_name)
@@ -524,7 +522,6 @@ def main(gps_path, acc_path, config_file,
             merged_data_pd.fixTypeCode = merged_data_pd.fixTypeCode.astype('Int64')
 
             if trip_detection:
-
                 merged_data_pd.tripNumber = merged_data_pd.tripNumber.astype('Int64')
                 merged_data_pd.tripType = merged_data_pd.tripType.astype('Int64')
 
@@ -536,7 +533,6 @@ def main(gps_path, acc_path, config_file,
             print(" ")
 
         if not merge_data_to_acc and not merge_data_to_gps:
-
             ## save processed GPS data
             gps_data.toPandas().to_csv('HABITUS_output/' + file_gps[:-4] + '_habitus_gps.csv', index=False)
             print(" ===> GPS data saved in: {}_habitus_gps.csv".format(file_gps[:-4]))
@@ -590,6 +586,7 @@ def main(gps_path, acc_path, config_file,
     program_duration = time.time() - program_start
     print("Program completed in: {}".format(time.strftime("%H:%M:%S", time.gmtime(program_duration))))
     print(" ")
+
 
 if __name__ == "__main__":
     arguments = parser.parse_args()
