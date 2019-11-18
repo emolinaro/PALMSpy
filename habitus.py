@@ -130,6 +130,8 @@ def main(gps_path, acc_path, config_file,
             settings = json.load(f)
         ## copy JSON config file into output folder
         shutil.copy(config_file, 'HABITUS_output/')
+        num_cores = settings['spark']['default']['cores']
+        default_partitions = settings['spark']['default']['cores']
 
     ## Set Spark configuration parameters
     conf = SparkConf().setAll([('spark.memory.fraction', settings['spark']['memory']['fraction']),

@@ -1,6 +1,6 @@
 FROM openjdk:8-jdk-slim
 
-ARG BUILD_DATE=17-11-2019
+ARG BUILD_DATE=18.11.2019
 ARG HABITUS_VERSION=1.9.2
 
 MAINTAINER Emiliano Molinaro <emil.molinaro@gmail.com>
