@@ -490,7 +490,7 @@ def select_acc_intervals(df, ts_name, interval, window, incl_vect=False, incl_ac
         for col in selected_cols:
             df2 = df2.withColumn(col, F.when(((F.col('total_sec') - minp) % window == 0),
                                              F.sum(col).over(Window.orderBy('total_sec')
-                                                             .rowsBetween(0, window // interval - 1)
+                                                             .rangeBetween(0, window - interval)
                                                              )
                                              ).otherwise(0)
                                  )
