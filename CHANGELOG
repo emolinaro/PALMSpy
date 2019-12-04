@@ -1,6 +1,12 @@
 CHANGELOG FILE
 ===============
 
+2019-12-04 Emiliano Molinaro <emil.molinaro@gmail.com>
+
+    * Version 1.9.3
+
+    * AccProcessing.py: fix bug in select_acc_intervals due to incorrect definition of sliding interval window
+
 2019-05-20 Emiliano Molinaro <emil.molinaro@gmail.com>
 
     * Version 1.9.2
