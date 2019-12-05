@@ -273,7 +273,7 @@ def main(gps_path, acc_path, config_file,
         ## read raw accelerometer data
         acc_data_raw = spark.read.text(acc_path + file_acc)
 
-        step, acc_data = gen_acc_dataframe(acc_data_raw)
+        step, acc_data = gen_acc_dataframe(acc_data_raw, ts_name)
 
         acc_columns = ['axis1', 'axis2', 'axis3', 'steps', 'lux', 'incl_off', 'incl_standing', 'incl_sitting',
                        'incl_lying']

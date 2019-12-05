@@ -46,7 +46,7 @@ def queryrows(df, string):
 
 ##########################################################################################################
 
-def gen_acc_dataframe(df):
+def gen_acc_dataframe(df, ts_name):
     """
         GENERATE ACCELEROMETER DATAFRAME
 
@@ -94,29 +94,9 @@ def gen_acc_dataframe(df):
     acc_data = acc_data.selectExpr('value as acc_data')  # change column name to 'acc_data'
     acc_data = acc_data.withColumn('id', F.monotonically_increasing_id())
 
-    # tot_intervals = acc_data.count()         #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    # timestamps = [start_timestamp + k*interval_sec for k in range(tot_intervals)]
-
-    ## implementation with Pandas dataframe -- slow, not use it
-    # acc_data = acc_data.toPandas()
-    # acc_data['timestamp'] = timestamps
-    # acc_data = spark.createDataFrame(acc_data).select(['timestamp', 'acc_data'])
-
-    ## the following lines do not work in a multicore setting because only data loaded on one
-    ## core will be retrieved
-    # time_col = Row("timestamp")
-    # time_rdd = spark.sparkContext.parallelize(timestamps)
-    # time_df = time_rdd.map(time_col).toDF()
-    # time_df = time_df.withColumn('id', F.monotonically_increasing_id())
-
-    ## the same problem as above with the following solution
-    # time_df = spark.createDataFrame(timestamps, TimestampType()).selectExpr('value as timestamp')
-    # time_df = time_df.withColumn('id', F.monotonically_increasing_id())
-    # acc_data = acc_data.join(time_df, 'id').drop('id').select(['timestamp','acc_data'])
-
     app_fun = F.udf(lambda k: start_timestamp + k * interval_sec, TimestampType())
-    acc_data = acc_data.withColumn('timestamp', app_fun(acc_data['id'])
-                                   ).select(['timestamp', 'acc_data'])
+    acc_data = acc_data.withColumn(ts_name, app_fun(acc_data['id'])
+                                   ).select([ts_name, 'acc_data'])
 
     return interval_sec.seconds, acc_data
 
@@ -414,7 +394,7 @@ def detect_bouts(df, ts_name, col_name, new_col, interval, UP, LOW, DURATION, TO
         df3 = df3.withColumn('activity_start', F.when((F.col('activity_start').isNull()) & \
                                                       (F.col('pause') == 0),
                                                       F.last(F.col('activity_start'), ignorenulls=True)
-                                                      .over(Window.orderBy('timestamp'))
+                                                      .over(Window.orderBy(ts_name))
                                                       )
                              .otherwise(F.col('activity_start'))
                              ).drop('pause')
@@ -433,7 +413,7 @@ def detect_bouts(df, ts_name, col_name, new_col, interval, UP, LOW, DURATION, TO
 
     # Assign bout to dataframe
     df3 = df3.join(df2, ['{}'.format(ts_name)], 'leftouter').drop(*['activity_start', 'check'])
-    df3 = df3.withColumn('bout_start', F.when(F.col('bout_start').isNull(), F.col('timestamp')) \
+    df3 = df3.withColumn('bout_start', F.when(F.col('bout_start').isNull(), F.col(ts_name)) \
                          .otherwise(F.col('bout_start'))
                          )
 
