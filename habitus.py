@@ -340,7 +340,7 @@ def main(gps_path, acc_path, config_file,
         time_format = 'HH:mm:ss'
         datetime_format = date_format + ' ' + time_format
 
-        gps_data = gen_gps_dataframe(gps_data_raw, datetime_format).cache()
+        gps_data = gen_gps_dataframe(gps_data_raw, ts_name, datetime_format).cache()
         gps_data.count()
 
         print(" ===> set fix type...")
