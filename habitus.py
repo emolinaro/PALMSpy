@@ -148,6 +148,7 @@ def main(gps_path, acc_path, config_file,
                                ('spark.network.timeout', settings['spark']['network']['timeout']),
                                ('spark.sql.codegen.fallback', settings['spark']['sql']['codegen']['fallback']),
                                ('spark.default.parallelism', settings['spark']['default']['parallelism']),
+                               ('spark.scheduler.listenerbus.eventqueue.capacity', '50000'),
                                ('spark.ui.showConsoleProgress', 'false'),
                                ('spark.cleaner.referenceTracking.blocking', 'false'),
                                ('spark.cleaner.periodicGC.interval', '3min')
