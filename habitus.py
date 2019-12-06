@@ -342,7 +342,7 @@ def main(gps_path, acc_path, config_file,
         datetime_format = date_format + ' ' + time_format
 
         gps_data = gen_gps_dataframe(gps_data_raw, ts_name, datetime_format).cache()
-        gps_data.count()
+        num_fixes = gps_data.count()
 
         ## Filter data according to new epoch
         print(" ===> select GPS data every {} seconds...".format(str(interval)))
@@ -361,17 +361,13 @@ def main(gps_path, acc_path, config_file,
 
             start_time = time.time()
             gps_data = select_gps_intervals(gps_data, ts_name, interval).cache()
-            diff_fixes = num_fixes - gps_data.count()
-            num_fixes = num_fixes - diff_fixes
             elapsed_time = time.time() - start_time
             print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-            print("      number of fixes: {}".format(str(num_fixes)))
             print(" ")
 
         print(" ===> set fix type...")
         start_time = time.time()
         gps_data = set_fix_type(gps_data, ts_name, fix_type_col, los_max_duration).cache()
-        num_fixes = gps_data.count()
         elapsed_time = time.time() - start_time
         print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
         print("      number of fixes: {}".format(str(num_fixes)))
