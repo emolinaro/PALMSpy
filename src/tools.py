@@ -1,6 +1,6 @@
 class Metadata:
     name = 'HABITUS'
-    version = '1.9.2'
+    version = '1.9.3'
     mantainer = 'Emiliano Molinaro'
     email = 'emil.molinaro@gmail.com'
     authors = 'Emiliano Molinaro'
