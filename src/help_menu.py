@@ -1,7 +1,7 @@
 import argparse
 from src.tools import Metadata
 
-meta = Metadata()
+meta = Metadata("VERSION")
 VER = meta.version
 program = meta.name
 

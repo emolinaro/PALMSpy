@@ -39,8 +39,7 @@ from src.help_menu import parser
 from src.GPSProcessing import *
 from src.AccProcessing import *
 
-meta = Metadata()
-
+meta = Metadata('VERSION')
 
 def header():
     version = meta.version
@@ -57,7 +56,6 @@ def header():
         print(element)
     print(" ")
     pass
-
 
 def main(gps_path, acc_path, config_file,
          interval, insert_missing, insert_until,
@@ -151,7 +149,8 @@ def main(gps_path, acc_path, config_file,
                                ('spark.scheduler.listenerbus.eventqueue.capacity', '50000'),
                                ('spark.ui.showConsoleProgress', 'false'),
                                ('spark.cleaner.referenceTracking.blocking', 'false'),
-                               ('spark.cleaner.periodicGC.interval', '3min')
+                               ('spark.cleaner.periodicGC.interval', '3min'),
+                               ('spark.driver.host', '127.0.0.1')
                                ]
                               )
     ## ('spark.driver.host', 'localhost') # TODO: allows to pass configs with spark-submit, without spark.conf file
@@ -361,6 +360,7 @@ def main(gps_path, acc_path, config_file,
 
             start_time = time.time()
             gps_data = select_gps_intervals(gps_data, ts_name, interval).cache()
+            num_fixes = gps_data.count()
             elapsed_time = time.time() - start_time
             print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
             print(" ")
