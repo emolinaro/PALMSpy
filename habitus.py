@@ -344,15 +344,6 @@ def main(gps_path, acc_path, config_file,
         gps_data = gen_gps_dataframe(gps_data_raw, ts_name, datetime_format).cache()
         gps_data.count()
 
-        print(" ===> set fix type...")
-        start_time = time.time()
-        gps_data = set_fix_type(gps_data, ts_name, los_max_duration).cache()
-        num_fixes = gps_data.count()
-        elapsed_time = time.time() - start_time
-        print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-        print("      number of fixes: {}".format(str(num_fixes)))
-        print(" ")
-
         ## Filter data according to new epoch
         print(" ===> select GPS data every {} seconds...".format(str(interval)))
 
@@ -377,15 +368,24 @@ def main(gps_path, acc_path, config_file,
             print("      number of fixes: {}".format(str(num_fixes)))
             print(" ")
 
+        print(" ===> set fix type...")
+        start_time = time.time()
+        gps_data = set_fix_type(gps_data, ts_name, fix_type_col, los_max_duration).cache()
+        num_fixes = gps_data.count()
+        elapsed_time = time.time() - start_time
+        print("      time elapsed: {}".format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+        print("      number of fixes: {}".format(str(num_fixes)))
+        print(" ")
+
         ## Calculate distance and speed at each epoch
-        gps_data = set_distance_and_speed(gps_data, dist_col, speed_col, ts_name).cache()
+        gps_data = set_distance_and_speed(gps_data, dist_col, speed_col, ts_name, fix_type_col).cache()
         gps_data.count()
 
         ## Apply filters
         if filter_invalid_values:
             print(" ===> apply velocity filter...")
             start_time = time.time()
-            gps_data = filter_speed(gps_data, speed_col, max_speed).cache()
+            gps_data = filter_speed(gps_data, speed_col, fix_type_col, max_speed).cache()
             diff_fixes = num_fixes - gps_data.count()
             num_fixes = num_fixes - diff_fixes
             elapsed_time = time.time() - start_time
@@ -395,7 +395,7 @@ def main(gps_path, acc_path, config_file,
 
             print(" ===> apply acceleration filter...")
             start_time = time.time()
-            gps_data = filter_acceleration(gps_data, speed_col, ts_name).cache()
+            gps_data = filter_acceleration(gps_data, speed_col, ts_name, fix_type_col).cache()
             diff_fixes = num_fixes - gps_data.count()
             num_fixes = num_fixes - diff_fixes
             elapsed_time = time.time() - start_time
@@ -405,7 +405,7 @@ def main(gps_path, acc_path, config_file,
 
             print(" ===> apply elevation change filter...")
             start_time = time.time()
-            gps_data = filter_height(gps_data, ele_col, ts_name, max_ele_change).cache()
+            gps_data = filter_height(gps_data, ele_col, ts_name, fix_type_col, max_ele_change).cache()
             diff_fixes = num_fixes - gps_data.count()
             num_fixes = num_fixes - diff_fixes
             elapsed_time = time.time() - start_time
@@ -415,7 +415,7 @@ def main(gps_path, acc_path, config_file,
 
             print(" ===> apply three fixes filter...")
             start_time = time.time()
-            gps_data = filter_change_dist_3_fixes(gps_data, dist_col, ts_name, min_change_3_fixes).cache()
+            gps_data = filter_change_dist_3_fixes(gps_data, dist_col, ts_name, fix_type_col, min_change_3_fixes).cache()
             diff_fixes = num_fixes - gps_data.count()
             num_fixes = num_fixes - diff_fixes
             elapsed_time = time.time() - start_time
@@ -454,7 +454,7 @@ def main(gps_path, acc_path, config_file,
             if detect_trip_mode:
                 print(" ===> classify trips...")
                 start_time = time.time()
-                gps_data = classify_trips(gps_data, ts_name, dist_col, speed_col,
+                gps_data = classify_trips(gps_data, ts_name, dist_col, speed_col, fix_type_col,
                                           vehicle_cutoff, bicycle_cutoff, walk_cutoff,
                                           min_trip_length, min_trip_duration, min_segment_length,
                                           percentile_to_sample).cache()

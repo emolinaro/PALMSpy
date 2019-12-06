@@ -236,7 +236,7 @@ def haversine_dist(lat1, lon1, lat2, lon2):
 
 ##########################################################################################################
 
-def set_fix_type(df, ts_name, ws):
+def set_fix_type(df, ts_name, fix_type_name, ws):
     """
         Set fix type
 
@@ -265,39 +265,39 @@ def set_fix_type(df, ts_name, ws):
     df2.cache()
 
     # Set fix type of first row as 'first fix'
-    df2 = df2.withColumn('fixTypeCode', F.when(F.col('total_sec') == minp, 2))
+    df2 = df2.withColumn(fix_type_name, F.when(F.col('total_sec') == minp, 2))
 
     # Set a new 'first fix' when the interval between current and previous timestamps
     # is larger than the GPS loss signal duration, otherwise it is a 'valid' fix
-    df2 = df2.withColumn('fixTypeCode',
+    df2 = df2.withColumn(fix_type_name,
                          F.when(F.col('total_sec') - F.lag('total_sec',1,0)
                                                       .over(w) > ws, 2)
                          .otherwise(1)
                         )
 
     # Set 'lone fix' when the current fix and the following are both set to 'first fix'
-    df2 = df2.withColumn('fixTypeCode',
-                         F.when(F.col('fixTypeCode') + F.lead('fixTypeCode')
+    df2 = df2.withColumn(fix_type_name,
+                         F.when(F.col(fix_type_name) + F.lead(fix_type_name)
                                                        .over(w) == 4, 5)
-                          .otherwise(F.col('fixTypeCode'))
+                          .otherwise(F.col(fix_type_name))
                         )
 
     # Filter out 'lone fixes'
-    df2 = df2.filter(F.col('fixTypeCode') != 5).orderBy(ts_name)
+    df2 = df2.filter(F.col(fix_type_name) != 5).orderBy(ts_name)
 
     # Set 'last fix'
-    df2 = df2.withColumn('fixTypeCode',
-                         F.when(F.lead('fixTypeCode').over(w) == 2, 3)
-                          .otherwise(F.col('fixTypeCode'))
+    df2 = df2.withColumn(fix_type_name,
+                         F.when(F.lead(fix_type_name).over(w) == 2, 3)
+                          .otherwise(F.col(fix_type_name))
                         ).drop('total_sec')
 
-    df2.select(df.columns + ['fixTypeCode'])
+    df2.select(df.columns + [fix_type_name])
 
     return df2
 
 ##########################################################################################################
 
-def set_distance_and_speed(df, dcol, scol, tscol):
+def set_distance_and_speed(df, dcol, scol, tscol, fix_col):
     """
         Calculate distance and speed at each epoch
 
@@ -320,7 +320,7 @@ def set_distance_and_speed(df, dcol, scol, tscol):
                          .over(w)
                          )
 
-    cond = (F.col('fixTypeCode') == 1)
+    cond = (F.col(fix_col) == 1)
 
     first_lat = df2.select('lat').first()[0]
     first_lon = df2.select('lon').first()[0]
@@ -462,7 +462,7 @@ def fill_timestamp(df, ts_name, fix_type_name, interval, ws):
 
 ##########################################################################################################
 
-def filter_speed(df, vcol, vmax):
+def filter_speed(df, vcol, fix_col, vmax):
     """
         Exclude data with velocity larger that give value
 
@@ -473,7 +473,7 @@ def filter_speed(df, vcol, vmax):
 
     """
 
-    cond = (F.col('fixTypeCode') == 1)
+    cond = (F.col(fix_col) == 1)
 
     df = df.withColumn('check', F.when(cond &
                                        (F.col(vcol) > vmax),
@@ -487,7 +487,7 @@ def filter_speed(df, vcol, vmax):
 
 ##########################################################################################################
 
-def filter_height(df, hcol, tscol, dhmax):
+def filter_height(df, hcol, tscol, fix_col, dhmax):
     """
         Excludes data points where the change of height between two consecutive points is larger dhmax
 
@@ -499,7 +499,7 @@ def filter_height(df, hcol, tscol, dhmax):
 
     """
 
-    cond = (F.col('fixTypeCode') == 1)
+    cond = (F.col(fix_col) == 1)
 
     spark  = SparkSession.builder.getOrCreate()
 
@@ -524,7 +524,7 @@ def filter_height(df, hcol, tscol, dhmax):
 
 ##########################################################################################################
 
-def filter_change_dist_3_fixes(df, dcol, tscol, dmin):
+def filter_change_dist_3_fixes(df, dcol, tscol, fix_col, dmin):
     """
         Excludes data points where the minimum change in distances between three fixes is less than dmin
 
@@ -543,7 +543,7 @@ def filter_change_dist_3_fixes(df, dcol, tscol, dmin):
     # Define a window over timestamps
     w = Window.orderBy(tscol)
 
-    cond = (F.col('fixTypeCode') == 1)
+    cond = (F.col(fix_col) == 1)
 
     first_lat = df.select('lat').first()[0]
     first_lon = df.select('lon').first()[0]
@@ -585,7 +585,7 @@ def filter_change_dist_3_fixes(df, dcol, tscol, dmin):
 
 ##########################################################################################################
 
-def filter_acceleration(df, scol, tscol, amax=7):
+def filter_acceleration(df, scol, tscol, fix_col, amax=7):
     """
         Excludes data points where the acceleration is more than amax.
 
@@ -602,7 +602,7 @@ def filter_acceleration(df, scol, tscol, amax=7):
     # Define a window over timestamps
     w = Window.orderBy(tscol)
 
-    cond = (F.col('fixTypeCode') == 1)
+    cond = (F.col(fix_col) == 1)
 
     # Calculate acceleration
     df2 = df.withColumn('acc', F.abs((F.col(scol) - F.lag(F.col(scol),1).over(w)))/
@@ -1525,8 +1525,8 @@ def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per
                         )
 
     # 2. Define last fix as ENDPOINT and state as STATIONARY
-    df2 = df2.withColumn('state', F.when(F.col('fixTypeCode') == 3, 0).otherwise(F.col('state')))
-    df2 = df2.withColumn('tripType', F.when(F.col('fixTypeCode') == 3, 4).otherwise(F.col('tripType')))
+    df2 = df2.withColumn('state', F.when(F.col(fix_type_name) == 3, 0).otherwise(F.col('state')))
+    df2 = df2.withColumn('tripType', F.when(F.col(fix_type_name) == 3, 4).otherwise(F.col('tripType')))
 
     # 3. Define state and trip type of first tracking point
     df2 = df2.withColumn('state', F.when(cond0b, 2).otherwise(F.col('state')))
@@ -1912,8 +1912,8 @@ def detect_trips(df, ts_name, dist_name, speed_name, fix_type_name, min_dist_per
 
     # 17. Sanity checks
     ## Redefine last fix as ENDPOINT and state as STATIONARY
-    df2 = df2.withColumn('state', F.when(F.col('fixTypeCode') == 3, 0).otherwise(F.col('state')))
-    df2 = df2.withColumn('tripType', F.when(F.col('fixTypeCode') == 3, 4).otherwise(F.col('tripType')))
+    df2 = df2.withColumn('state', F.when(F.col(fix_type_name) == 3, 0).otherwise(F.col('state')))
+    df2 = df2.withColumn('tripType', F.when(F.col(fix_type_name) == 3, 4).otherwise(F.col('tripType')))
 
     ## Correct isolated points with tripType=1
     df2 = df2.withColumn('tripType', F.when((F.col('state') == 2) &
@@ -2140,7 +2140,7 @@ def trip_segmentation(df, ts_name, speed_segment_length):
 
 ##########################################################################################################
 
-def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bicycle_speed_cutoff,
+def classify_trips(df, ts_name, dist_name, speed_name, fix_type_name, vehicle_speed_cutoff, bicycle_speed_cutoff,
                    walk_speed_cutoff, min_trip_length, min_trip_duration, speed_segment_length, speed_percentile):
     """
 
@@ -2523,32 +2523,32 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
                          ).orderBy(ts_name)
 
     ## case of last fix which is not the end of a trip
-    df2 = df2.withColumn('tripMOT', F.when((F.col('fixTypeCode') == 3) &
+    df2 = df2.withColumn('tripMOT', F.when((F.col(fix_type_name) == 3) &
                                            (F.col('trip') == 4) &
                                            (F.lag('trip', 1).over(Window.orderBy(ts_name)) == 0),
                                            0).otherwise(F.col('tripMOT'))
                          ).orderBy(ts_name)
-    df2 = df2.withColumn('trip', F.when((F.col('fixTypeCode') == 3) &
+    df2 = df2.withColumn('trip', F.when((F.col(fix_type_name) == 3) &
                                         (F.col('trip') == 4) &
                                         (F.lag('trip', 1).over(Window.orderBy(ts_name)) == 0),
                                         0).otherwise(F.col('trip'))
                          ).orderBy(ts_name)
 
     ## case of first fix followed by start trip
-    df2 = df2.withColumn('tripMOT', F.when((F.col('fixTypeCode') == 2) &
+    df2 = df2.withColumn('tripMOT', F.when((F.col(fix_type_name) == 2) &
                                            (F.col('trip') == 0) &
                                            (F.lead('trip', 1).over(Window.orderBy(ts_name)) == 1),
                                            F.lead('tripMOT', 1).over(Window.orderBy(ts_name))
                                            ).otherwise(F.col('tripMOT'))
                          ).orderBy(ts_name)
-    df2 = df2.withColumn('trip', F.when((F.col('fixTypeCode') == 2) &
+    df2 = df2.withColumn('trip', F.when((F.col(fix_type_name) == 2) &
                                         (F.col('trip') == 0) &
                                         (F.lead('trip', 1).over(Window.orderBy(ts_name)) == 1),
                                         1).otherwise(F.col('trip'))
                          ).orderBy(ts_name)
     df2 = df2.withColumn('trip', F.when((F.col('trip') == 1) &
                                         (F.lag('trip').over(Window.orderBy(ts_name)) == 1) &
-                                        (F.lag('fixTypeCode', 1).over(Window.orderBy(ts_name)) == 2),
+                                        (F.lag(fix_type_name, 1).over(Window.orderBy(ts_name)) == 2),
                                         2).otherwise(F.col('trip'))
                          ).orderBy(ts_name)
 
@@ -2584,7 +2584,7 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
     # sanity checks
 
     ## update trip number for first fixes
-    df2 = df2.withColumn('tripNumber', F.when((F.col('fixTypeCode') == 2) &
+    df2 = df2.withColumn('tripNumber', F.when((F.col(fix_type_name) == 2) &
                                               (F.col('tripType') == 1),
                                               F.lead('tripNumber', 1).over(Window.orderBy(ts_name))
                                               ).otherwise(F.col('tripNumber'))
@@ -2759,7 +2759,7 @@ def classify_trips(df, ts_name, dist_name, speed_name, vehicle_speed_cutoff, bic
     df2 = df2.withColumn('tripNumber', F.when(F.col('tripType') == 0, 0).otherwise(F.col('tripNumber')))
     df2 = df2.withColumn('tripNumber', F.when(F.col('tripNumber').isNull(), 0).otherwise(F.col('tripNumber')))
     """
-    df2 = df2.select(ts_name, 'dow', 'lat', 'lon', 'fixTypeCode', 'tripNumber', 'tripType', 'tripMOT')
+    df2 = df2.select(ts_name, 'dow', 'lat', 'lon', fix_type_name, 'tripNumber', 'tripType', 'tripMOT')
 
     """
     ## save results
