@@ -149,7 +149,8 @@ def main(gps_path, acc_path, config_file,
                                ('spark.scheduler.listenerbus.eventqueue.capacity', '50000'),
                                ('spark.ui.showConsoleProgress', 'false'),
                                ('spark.cleaner.referenceTracking.blocking', 'false'),
-                               ('spark.cleaner.periodicGC.interval', '3min')
+                               ('spark.cleaner.periodicGC.interval', '3min'),
+                               ('spark.driver.host', '127.0.0.1')
                                ]
                               )
     ## ('spark.driver.host', 'localhost') # TODO: allows to pass configs with spark-submit, without spark.conf file
@@ -550,7 +551,7 @@ def main(gps_path, acc_path, config_file,
 
     ## Merge output files in one single file
     if (merge_data_to_gps):
-        list_procs = sorted(glob.glob("HABITUS_output/*gps_acc*.csv"))
+        list_procs = sorted(glob.glob("HABITUS_output/*gps_acc*.csv"), key=os.path.getmtime)
 
         header_saved = False
         if len(list_procs) > 1:
@@ -565,7 +566,7 @@ def main(gps_path, acc_path, config_file,
                             fout.write(line)
 
     if (merge_data_to_acc):
-        list_procs = sorted(glob.glob("HABITUS_output/*acc_gps*.csv"))
+        list_procs = sorted(glob.glob("HABITUS_output/*acc_gps*.csv"), key=os.path.getmtime)
 
         header_saved = False
         if len(list_procs) > 1:
