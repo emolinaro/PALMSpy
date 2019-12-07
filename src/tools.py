@@ -1,11 +1,8 @@
 class Metadata:
 
-    def __init__(self, filename):
-        with open(filename, 'r') as file:
-            VERSION = file.read()
+    def __init__(self):
 
-        self.version = VERSION
-
+        self.version = '1.9.3'
         self.name = 'HABITUS'
         self.mantainer = 'Emiliano Molinaro'
         self.email = 'emil.molinaro@gmail.com'

@@ -39,7 +39,7 @@ from src.help_menu import parser
 from src.GPSProcessing import *
 from src.AccProcessing import *
 
-meta = Metadata('VERSION')
+meta = Metadata()
 
 def header():
     version = meta.version
