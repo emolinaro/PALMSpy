@@ -7,6 +7,8 @@ CHANGELOG FILE
 
     * AccProcessing.py: fix bug in select_acc_intervals due to incorrect definition of sliding interval window
 
+    * habitus.py: apply select_gps_intervals before set_fix_type; this is relevant if the output epoch is larger than GPS raw data interval
+
 2019-05-20 Emiliano Molinaro <emil.molinaro@gmail.com>
 
     * Version 1.9.2
