@@ -12,7 +12,6 @@ setuptools.setup(
     version=meta.version,
     scripts=['habitus.py', 'habitus'],
     py_modules=['src.__init__', 'src.help_menu', 'src.GPSProcessing', 'src.AccProcessing', 'src.tools'],
-    include_package_data=True,
     author=meta.authors,
     author_email=meta.email,
     description=meta.description,
