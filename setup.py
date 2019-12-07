@@ -2,7 +2,7 @@ import setuptools
 
 from src.tools import Metadata
 
-meta = Metadata('VERSION')
+meta = Metadata()
 
 with open("README.md", "r") as file:
     long_description = file.read()
