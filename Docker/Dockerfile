@@ -1,6 +1,6 @@
 FROM openjdk:8-jdk-slim
 
-ARG BUILD_DATE=07.12.2019
+ARG BUILD_DATE=9-12-2019
 
 MAINTAINER Emiliano Molinaro <emil.molinaro@gmail.com>
 
