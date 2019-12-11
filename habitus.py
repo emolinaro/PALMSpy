@@ -149,7 +149,8 @@ def main(gps_path, acc_path, config_file,
                                ('spark.scheduler.listenerbus.eventqueue.capacity', '50000'),
                                ('spark.ui.showConsoleProgress', 'false'),
                                ('spark.cleaner.referenceTracking.blocking', 'false'),
-                               ('spark.cleaner.periodicGC.interval', '3min')
+                               ('spark.cleaner.periodicGC.interval', '3min'),
+                               ('spark.driver.host', '127.0.0.1')
                                ]
                               )
     ## ('spark.driver.host', 'localhost') # TODO: allows to pass configs with spark-submit, without spark.conf file

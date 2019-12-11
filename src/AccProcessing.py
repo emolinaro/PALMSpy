@@ -560,6 +560,7 @@ def select_acc_intervals(df, ts_name, interval, window, incl_vect=False, incl_ac
         df2.count()
 
         for col in selected_cols:
+
             df2 = df2.withColumn(col, F.when(((F.col('total_sec') - minp) % window == 0),
                                              F.sum(col).over(Window.orderBy('total_sec')
                                                              .rangeBetween(0, window - interval)
@@ -581,14 +582,16 @@ def select_acc_intervals(df, ts_name, interval, window, incl_vect=False, incl_ac
         df2 = df
 
     if incl_vect:
-        df2 = df.withColumn('vectMag', F.sqrt(F.col('axis1') ** 2 + F.col('axis2') ** 2 + F.col('axis3') ** 2))
+
+        df2 = df2.withColumn('vectMag', F.sqrt(F.col('axis1') ** 2 + F.col('axis2') ** 2 + F.col('axis3') ** 2))
 
         cols.insert(1, 'vectMag')
 
         df2 = df2.select(cols).orderBy(ts_name)
 
     if not incl_acc:
-        df2 = df.select(ts_name, cols[1])
+
+        df2 = df2.select(ts_name, cols[1])
 
     return df2
 
