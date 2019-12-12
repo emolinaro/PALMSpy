@@ -1,12 +1,12 @@
 FROM openjdk:8-jdk-slim
 
-ARG BUILD_DATE=9-12-2019
+ARG BUILD_DATE=12.12.2019
 
 MAINTAINER Emiliano Molinaro <emil.molinaro@gmail.com>
 
-LABEL org.label-schema.name="HABITUS v1.9.3" \
+LABEL org.label-schema.name="HABITUS v1.9.4" \
       org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.version=1.9.3 \
+      org.label-schema.version=1.9.4 \
       authors="Emiliano Molinaro" \
       description="HABITUS is an implementation of the Personal Activity and Location Measurement System (PALMS),\
 written in Python and integrated with Apache Spark for cluster-computing.\
@@ -44,9 +44,9 @@ RUN apt-get update && \
 WORKDIR /work
 
 COPY environment.yml environment.yml
-COPY wheels/habitus-1.9.3-py3-none-any.whl habitus-1.9.3-py3-none-any.whl
+COPY wheels/habitus-1.9.4-py3-none-any.whl habitus-1.9.4-py3-none-any.whl
 
-RUN sed -i -e "s/x.y.z/1.9.3/g" environment.yml && \
+RUN sed -i -e "s/x.y.z/1.9.4/g" environment.yml && \
     conda env update -n base --file environment.yml && \
     conda clean -tipsy && \
     rm *.yml* *.whl
