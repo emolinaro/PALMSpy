@@ -1,6 +1,12 @@
 CHANGELOG FILE
 ===============
 
+2019-12-12 Emiliano Molinaro <emil.molinaro@gmail.com>
+
+    * Version 1.9.4
+
+    * AccProcessing.py: fix bug in select_acc_intervals due to incorrect implementation of parameters 'incl_vect' and incl_acc'
+
 2019-12-04 Emiliano Molinaro <emil.molinaro@gmail.com>
 
     * Version 1.9.3
