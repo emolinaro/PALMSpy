@@ -56,15 +56,20 @@ def gen_gps_dataframe(df, ts_name, datetime_format):
     """
 
     def utc_to_local(utc_dt, lat, lon):
-        from tzwhere import tzwhere
         import pytz
+        import timezonefinder
 
-        tzwhere = tzwhere.tzwhere()
-        timezone_str = tzwhere.tzNameAt(lat, lon)
-        time_zone = pytz.timezone(timezone_str)
-        utcoff = time_zone.utcoffset(utc_dt)
+        tf = timezonefinder.TimezoneFinder()
 
-        return utcoff.total_seconds()
+        timezone_str = tf.timezone_at(lat=lat, lng=lon)
+
+        if timezone_str is None:
+            print("Could not determine the time zone")
+        else:
+            # Display the current time in that time zone
+            timezone = pytz.timezone(timezone_str)
+            utcoff = timezone.utcoffset(utc_dt)
+            return utcoff.total_seconds()
 
     def convert_speed(speed):
         speed_ = str(speed).replace(' km/h', '')
@@ -111,17 +116,9 @@ def gen_gps_dataframe(df, ts_name, datetime_format):
     gps_data = gps_data.drop(header[3])
 
     ## define latitude and longitude with sign and remove duplicated columns
-    gps_data = gps_data.withColumn('lat',
-                                   F.when(remove_space_fun(F.col('n/s')) == 'S',
-                                          F.col('latitude') * (-1)
-                                          ).otherwise(F.col('latitude'))
-                                   ).drop('latitude').drop('n/s')
+    gps_data = gps_data.withColumn('lat', F.when(remove_space_fun(F.col('n/s')) == 'S', F.abs(F.col('latitude')) * (-1)).otherwise(F.col('latitude'))).drop('latitude').drop('n/s')
 
-    gps_data = gps_data.withColumn('lon',
-                                   F.when(remove_space_fun(F.col('e/w')) == 'W',
-                                          F.col('longitude') * (-1)
-                                          ).otherwise(F.col('longitude'))
-                                   ).drop('longitude').drop('e/w')
+    gps_data = gps_data.withColumn('lon', F.when(remove_space_fun(F.col('e/w')) == 'W', F.abs(F.col('longitude')) * (-1)).otherwise(F.col('longitude'))).drop('longitude').drop('e/w')
 
     ## define timestamps
     gps_data = gps_data.withColumn(ts_name,
