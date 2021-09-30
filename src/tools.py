@@ -2,7 +2,7 @@ class Metadata:
 
     def __init__(self):
 
-        self.version = '1.9.4'
+        self.version = '1.9.5'
         self.name = 'HABITUS'
         self.mantainer = 'Emiliano Molinaro'
         self.email = 'emil.molinaro@gmail.com'
