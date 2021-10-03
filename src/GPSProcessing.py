@@ -68,8 +68,11 @@ def gen_gps_dataframe(df, ts_name, datetime_format):
         else:
             # Display the current time in that time zone
             timezone = pytz.timezone(timezone_str)
-            utcoff = timezone.utcoffset(utc_dt)
-            return utcoff.total_seconds()
+            try:
+                utcoff = timezone.utcoffset(utc_dt)
+                return utcoff.total_seconds()
+            except pytz.exceptions.AmbiguousTimeError:
+                print('pytz.exceptions.AmbiguousTimeError: %s' % utc_dt)
 
     def convert_speed(speed):
         speed_ = str(speed).replace(' km/h', '')
