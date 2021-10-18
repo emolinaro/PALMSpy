@@ -9,7 +9,7 @@ a GPS data logger and a physical activity monitor.
 
 #### Create a conda environment based on Python v3.7.x
 ```bash
-conda create -n palmspy python=3.7 -y
+conda create -n palmspy python=3.7 openjdk=8.0 -y
 conda activate palmspy
 ```
 
@@ -26,5 +26,5 @@ The wheel file is created in the folder `./dist`.
 
 #### Install the program
 ```bash
-pip install ./dist/habistus-x.y.z-py3-none-any.whl
+pip install ./dist/habitus-x.y.z-py3-none-any.whl
 ```
