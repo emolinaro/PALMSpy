@@ -26,5 +26,5 @@ The wheel file is created in the folder `./dist`.
 
 #### Install the program
 ```bash
-pip install ./dist/habitus-x.y.z-py3-none-any.whl
+pip install ./dist/palmspy-x.y.z-py3-none-any.whl
 ```

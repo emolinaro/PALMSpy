@@ -8,9 +8,9 @@ with open("README.md", "r") as file:
     long_description = file.read()
 
 setuptools.setup(
-    name='habitus',
+    name='palmspy',
     version=meta.version,
-    scripts=['habitus.py', 'habitus'],
+    scripts=['palmspy.py', 'palmspy'],
     py_modules=['src.__init__', 'src.help_menu', 'src.GPSProcessing', 'src.AccProcessing', 'src.tools'],
     author=meta.authors,
     author_email=meta.email,

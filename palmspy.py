@@ -93,8 +93,8 @@ def main(gps_path, acc_path, config_file,
         acc_path = acc_path + "/"
 
     ## Output directory
-    if not os.path.exists('HABITUS_output'):
-        os.makedirs('HABITUS_output')
+    if not os.path.exists('PALMSpy_output'):
+        os.makedirs('PALMSpy_output')
 
     ## Load default configuration parameters and update them from command line
     params = Input()
@@ -121,14 +121,14 @@ def main(gps_path, acc_path, config_file,
 
     ## Overwrite configuration parameters from file or save them to file
     if config_file == "":
-        with open('HABITUS_output/settings.json', 'w') as f:
+        with open('PALMSpy_output/settings.json', 'w') as f:
             json.dump(settings, f)
     else:
         file_settings = open(config_file, "r")
         with file_settings as f:
             settings = json.load(f)
         ## copy JSON config file into output folder
-        shutil.copy(config_file, 'HABITUS_output/')
+        shutil.copy(config_file, 'PALMSpy_output/')
         num_cores = settings['spark']['default']['cores']
         default_partitions = settings['spark']['default']['parallelism']
 
@@ -164,7 +164,7 @@ def main(gps_path, acc_path, config_file,
     """
 
     mode = "local[" + str(num_cores) + "]"
-    spark = SparkSession.builder.config(conf=conf).master(mode).appName("HABITUS").getOrCreate()
+    spark = SparkSession.builder.config(conf=conf).master(mode).appName("PALMSpy").getOrCreate()
     sc = spark.sparkContext
     sc.setLogLevel("ERROR")
     sc.setCheckpointDir('checkpoints')
@@ -182,7 +182,7 @@ def main(gps_path, acc_path, config_file,
     list_file_gps = sorted(os.listdir(gps_path))
     list_combined = list(zip(list_file_acc, list_file_gps))
 
-    output_filename = 'habitus'
+    output_filename = 'palmspy'
 
     ## GPS parameters
     #################
@@ -499,7 +499,7 @@ def main(gps_path, acc_path, config_file,
             merged_data.count()
 
             ## save combined dataframe
-            merged_data.toPandas().to_csv('HABITUS_output/' + output_filename + "_gps_acc_{}.csv".format(str(id)),
+            merged_data.toPandas().to_csv('PALMSpy_output/' + output_filename + "_gps_acc_{}.csv".format(str(id)),
                                           index=False)
             print(" ===> merged dataframe saved in: " + output_filename + "_gps_acc_{}.csv".format(str(id)))
             print(" ")
@@ -522,7 +522,7 @@ def main(gps_path, acc_path, config_file,
                 merged_data_pd.tripType = merged_data_pd.tripType.astype('Int64')
 
             ## save combined dataframe
-            merged_data_pd.to_csv('HABITUS_output/' + output_filename + "_acc_gps_{}.csv".format(str(id)),
+            merged_data_pd.to_csv('PALMSpy_output/' + output_filename + "_acc_gps_{}.csv".format(str(id)),
                                   index=False)
 
             print(" ===> merged dataframe saved in: " + output_filename + "_acc_gps_{}.csv".format(str(id)))
@@ -530,12 +530,12 @@ def main(gps_path, acc_path, config_file,
 
         if not merge_data_to_acc and not merge_data_to_gps:
             ## save processed GPS data
-            gps_data.toPandas().to_csv('HABITUS_output/' + file_gps[:-4] + '_habitus_gps.csv', index=False)
-            print(" ===> GPS data saved in: {}_habitus_gps.csv".format(file_gps[:-4]))
+            gps_data.toPandas().to_csv('PALMSpy_output/' + file_gps[:-4] + '_palmspy_gps.csv', index=False)
+            print(" ===> GPS data saved in: {}_palmspy_gps.csv".format(file_gps[:-4]))
 
             ## save processed accelerometer data
-            acc_data.toPandas().to_csv('HABITUS_output/' + file_acc[:-4] + '_habitus_acc.csv', index=False)
-            print(" ===> accelerometer data saved in: {}_habitus_acc.csv".format(file_acc[:-4]))
+            acc_data.toPandas().to_csv('PALMSpy_output/' + file_acc[:-4] + '_palmspy_acc.csv', index=False)
+            print(" ===> accelerometer data saved in: {}_palmspy_acc.csv".format(file_acc[:-4]))
             print(" ")
 
         print(" ")
@@ -550,11 +550,11 @@ def main(gps_path, acc_path, config_file,
 
     ## Merge output files in one single file
     if (merge_data_to_gps):
-        list_procs = sorted(glob.glob("HABITUS_output/*gps_acc*.csv"), key=os.path.getmtime)
+        list_procs = sorted(glob.glob("PALMSpy_output/*gps_acc*.csv"), key=os.path.getmtime)
 
         header_saved = False
         if len(list_procs) > 1:
-            with open('HABITUS_output/' + output_filename + '_gps_acc_all.csv', 'w') as fout:
+            with open('PALMSpy_output/' + output_filename + '_gps_acc_all.csv', 'w') as fout:
                 for filename in list_procs:
                     with open(filename) as fin:
                         head = next(fin)
@@ -565,11 +565,11 @@ def main(gps_path, acc_path, config_file,
                             fout.write(line)
 
     if (merge_data_to_acc):
-        list_procs = sorted(glob.glob("HABITUS_output/*acc_gps*.csv"), key=os.path.getmtime)
+        list_procs = sorted(glob.glob("PALMSpy_output/*acc_gps*.csv"), key=os.path.getmtime)
 
         header_saved = False
         if len(list_procs) > 1:
-            with open('HABITUS_output/' + output_filename + '_acc_gps_all.csv', 'w') as fout:
+            with open('PALMSpy_output/' + output_filename + '_acc_gps_all.csv', 'w') as fout:
                 for filename in list_procs:
                     with open(filename) as fin:
                         head = next(fin)

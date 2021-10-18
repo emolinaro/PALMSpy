@@ -2,8 +2,8 @@ class Metadata:
 
     def __init__(self):
 
-        self.version = '1.9.5'
-        self.name = 'HABITUS'
+        self.version = '1.9.6'
+        self.name = 'PALMSpy'
         self.mantainer = 'Emiliano Molinaro'
         self.email = 'emil.molinaro@gmail.com'
         self.authors = 'Emiliano Molinaro'

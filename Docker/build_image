@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-/usr/local/bin/docker build -t habitus:1.9.5 .
+/usr/local/bin/docker build -t palmspy:1.9.6 .

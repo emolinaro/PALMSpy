@@ -32,6 +32,7 @@ from pyspark.sql.types import DoubleType
 from math import *
 import numpy as np
 
+
 ##########################################################################################################
 
 def gen_gps_dataframe(df, ts_name, datetime_format):
@@ -121,9 +122,13 @@ def gen_gps_dataframe(df, ts_name, datetime_format):
     gps_data = gps_data.drop(header[3])
 
     ## define latitude and longitude with sign and remove duplicated columns
-    gps_data = gps_data.withColumn('lat', F.when(remove_space_fun(F.col('n/s')) == 'S', F.abs(F.col('latitude')) * (-1)).otherwise(F.col('latitude'))).drop('latitude').drop('n/s')
+    gps_data = gps_data.withColumn('lat', F.when(remove_space_fun(F.col('n/s')) == 'S',
+                                                 F.abs(F.col('latitude')) * (-1)).otherwise(F.col('latitude'))).drop(
+        'latitude').drop('n/s')
 
-    gps_data = gps_data.withColumn('lon', F.when(remove_space_fun(F.col('e/w')) == 'W', F.abs(F.col('longitude')) * (-1)).otherwise(F.col('longitude'))).drop('longitude').drop('e/w')
+    gps_data = gps_data.withColumn('lon', F.when(remove_space_fun(F.col('e/w')) == 'W',
+                                                 F.abs(F.col('longitude')) * (-1)).otherwise(F.col('longitude'))).drop(
+        'longitude').drop('e/w')
 
     ## define timestamps
     gps_data = gps_data.withColumn(ts_name,

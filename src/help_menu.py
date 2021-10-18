@@ -8,7 +8,7 @@ program = meta.name
 # refer to the program name: %(prog)s
 parser = argparse.ArgumentParser(
 	prog=meta.name,
-	usage='habitus --gps-path GPS_PATH --acc-path ACC_PATH [GPS options] [accelerometer options] [Spark options]',
+	usage='palmspy --gps-path GPS_PATH --acc-path ACC_PATH [GPS options] [accelerometer options] [Spark options]',
 	description="%(prog)s is an implementation of the Personal Activity and Location Measurement System (PALMS), written\
 	             in Python and integrated with Apache Spark for cluster-computing.\
 	             The program detects personal activity patterns of individual participants wearing\
