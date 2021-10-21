@@ -1,6 +1,14 @@
 CHANGELOG FILE
 ===============
 
+2021-10-21 Emiliano Molinaro <emil.molinaro@gmail.com>
+
+    * Version 1.9.6
+
+    * Changed software name from HABITUS to PALMSpy
+
+    * GPSProcessing.py: add exception when there is daylight savings time shift
+
 2019-12-12 Emiliano Molinaro <emil.molinaro@gmail.com>
 
     * Version 1.9.4
