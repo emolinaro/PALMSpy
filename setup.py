@@ -17,7 +17,7 @@ setuptools.setup(
     description=meta.description,
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/emolinaro/HABITUS",
+    url="https://github.com/emolinaro/PALMSpy",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

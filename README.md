@@ -5,26 +5,28 @@
 The program detects personal activity patterns of individual participants wearing
 a GPS data logger and a physical activity monitor.
 
+## Build dependencies
+
+- Conda 4.10.x
+- Make 4.2
+- OpenJDK 8.0
+- Python 3.7
+
 ## Installation instructions
 
 #### Create a conda environment based on Python v3.7.x
 ```bash
-conda create -n palmspy python=3.7 openjdk=8.0 -y
+conda create -n palmspy python=3.7 openjdk=8.0 make=4.2.1 -y
 conda activate palmspy
 ```
 
-#### Install dependencies
+#### Build and install
 ```bash
-pip install -r requirements.txt
+make
+make install
 ```
 
-#### Generate the latest release wheel
+#### Clean
 ```bash
-bash gen_package
-```
-The wheel file is created in the folder `./dist`.
-
-#### Install the program
-```bash
-pip install ./dist/palmspy-x.y.z-py3-none-any.whl
+make clean
 ```
