@@ -2,15 +2,14 @@
 
 # PALMSpy
 
-The program detects personal activity patterns of individual participants wearing
-a GPS data logger and a physical activity monitor.
+PALMSpy detects personal activity patterns of individual participants wearing a GPS data logger and a physical activity monitor.
 
 ## Build dependencies
 
-- Conda 4.10.x
-- Make 4.2
-- OpenJDK 8.0
-- Python 3.7
+- Conda v4.10.x
+- Make v4.2
+- OpenJDK v8.0
+- Python v3.7
 
 ## Installation instructions
 
@@ -20,13 +19,18 @@ conda create -n palmspy python=3.7 openjdk=8.0 make=4.2.1 -y
 conda activate palmspy
 ```
 
-#### Build and install
+#### Build and install the package
 ```bash
 make
 make install
 ```
 
-#### Clean
+#### Run integration tests
+```bash
+make test
+```
+
+#### Remove build artifacts 
 ```bash
 make clean
 ```
