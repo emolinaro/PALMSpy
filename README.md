@@ -25,7 +25,7 @@ make
 make install
 ```
 
-#### Run integration tests
+#### Run a simulation for testing
 ```bash
 make test
 ```
