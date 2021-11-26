@@ -19,7 +19,7 @@ SHELL ["/bin/bash",  "--login", "-c"]
 ###################
 
 RUN apt-get update \
- && apt-get install -y git --no-install-recommends \
+ && apt-get install -y git vim nano emacs build-essential --no-install-recommends \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
@@ -29,13 +29,15 @@ RUN git clone https://github.com/emolinaro/PALMSpy.git
 
 WORKDIR PALMSpy
 
+ENV PATH /opt/conda/envs/palmspy/bin:$PATH
+ENV CONDA_PREFIX="/opt/conda/envs/palmspy"
+
 RUN conda create -n palmspy python=3.7 openjdk=8.0 make=4.2.1 -y \
  && conda activate palmspy \
+ && echo "source activate palmspy" > ~/.bashrc \
  && make \
  && make install \
  && make check \
  && make clean
-
-ENV PATH /opt/conda/envs/palmspy/bin:$PATH
 
 WORKDIR /
