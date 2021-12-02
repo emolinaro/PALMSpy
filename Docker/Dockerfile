@@ -34,7 +34,6 @@ ENV CONDA_PREFIX="/opt/conda/envs/palmspy"
 
 RUN conda create -n palmspy python=3.7 openjdk=8.0 make=4.2.1 -y \
  && conda activate palmspy \
- && echo "source activate palmspy" > ~/.bashrc \
  && make \
  && make install \
  && make check \
