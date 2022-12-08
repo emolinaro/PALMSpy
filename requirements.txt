@@ -1,7 +1,7 @@
 appnope==0.1.0
 attrs==19.1.0
 backcall==0.1.0
-certifi==2019.3.9
+certifi==2022.12.7
 datefinder==0.7.0
 DateTime==4.3
 decorator==4.4.0
